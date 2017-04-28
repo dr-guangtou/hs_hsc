@@ -259,7 +259,7 @@ def coaddBatchCutout(root, inCat, size=100, filter='HSC-I',
                 else:
                     coaddColourImageFull(root, ra[i], dec[i], size[i],
                                          filt=colorFilters,
-                                         scaleBar=10,
+                                         scaleBar=None,
                                          prefix=newPrefix, name=None,
                                          info1=None, info2=None,
                                          info3=None, min=min, max=max,
