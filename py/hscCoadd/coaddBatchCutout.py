@@ -299,6 +299,7 @@ def singleCut(index, butler, root, useful, config):
     colorFilters = config['colorFilters']
     zField = config['zField']
     sizeField = config['sizeField']
+    scaleBar = config['scaleBar']
     verbose = config['verbose']
     noColor = config['noColor']
     onlyColor = config['onlyColor']
@@ -493,6 +494,7 @@ def singleCut(index, butler, root, useful, config):
                                  prefix=newPrefix, name=None,
                                  info1=None, info2=None,
                                  info3=None,
+                                 scaleBar=None,
                                  min=min, max=max, Q=Q,
                                  butler=butler)
         else:
@@ -503,6 +505,7 @@ def singleCut(index, butler, root, useful, config):
                                  prefix=newPrefix, name=name,
                                  info1=info1, info2=info2,
                                  info3=info3,
+                                 scaleBar=scaleBar,
                                  min=min, max=max, Q=Q,
                                  butler=butler)
     elif (matchStatus is 'Found' and not noColor):
@@ -528,7 +531,7 @@ def coaddBatchCutFull(root, inCat, size=100, filter='HSC-I',
                       infoField1=None, infoField2=None, clean=False,
                       min=-0.0, max=0.72, Q=15, safe=False, saveSrc=False,
                       makeDir=False, noName=False, njobs=1,
-                      imgOnly=False, allFilters=False):
+                      imgOnly=False, allFilters=False, scaleBar=10.0):
     """
     Generate HSC coadd cutout images.
 
@@ -588,7 +591,8 @@ def coaddBatchCutFull(root, inCat, size=100, filter='HSC-I',
               'makeDir': makeDir,
               'noName': noName,
               'imgOnly': imgOnly,
-              'allFilters': allFilters
+              'allFilters': allFilters,
+              'scaleBar': scaleBar
               }
 
     if njobs > 1 and multiJob:
@@ -615,7 +619,6 @@ if __name__ == '__main__':
     parser.add_argument('-j', '--njobs', type=int,
                         help='Number of jobs run at the same time',
                         dest='njobs', default=1)
-
     parser.add_argument('-p', '--prefix', dest='prefix',
                         help='Prefix of the output file',
                         default='hsc_coadd_cutout')
@@ -664,6 +667,9 @@ if __name__ == '__main__':
                         default=False)
     parser.add_argument('-makeDir', '--makeDir', action="store_true",
                         dest='makeDir', default=False)
+    parser.add_argument('-b', '--scalebar', type=float,
+                        help='Size of the scale bar in unit of arcsec',
+                        dest='scaleBar', default=10.0)
     args = parser.parse_args()
 
     coaddBatchCutFull(args.root, args.incat, size=args.size,
@@ -678,4 +684,4 @@ if __name__ == '__main__':
                       saveSrc=args.saveSrc, sample=args.sample,
                       makeDir=args.makeDir, noName=args.noName,
                       imgOnly=args.imgOnly, allFilters=args.allFilters,
-                      njobs=args.njobs)
+                      njobs=args.njobs, scaleBar=args.scaleBar)
