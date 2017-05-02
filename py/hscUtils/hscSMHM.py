@@ -1,4 +1,7 @@
-"""Parameterized models of the stellar mass - halo mass relation (SMHM)."""
+"""
+Parameterized models of the stellar mass - halo mass relation (SMHM).
+
+"""
 
 from __future__ import division, print_function
 from __future__ import absolute_import, unicode_literals
@@ -6,6 +9,10 @@ from __future__ import absolute_import, unicode_literals
 import numpy as np
 
 __all__ = ['Leauthaud12']
+
+__author__ = "Song Huang"
+__copyright__ = "Copyright 2017, All mankind"
+__email__ = "shuang89@ucsc.edu"
 
 
 class Behroozi10():
@@ -99,13 +106,11 @@ class Leauthaud12():
         else:
             raise KeyError("Wrong Redshift choice!!")
 
-
     def toMstar(self, Mh):
         """Estimate stellar mass via halo mass."""
         # TODO: Place holder
 
         return None
-
 
     def toMhalo(self, Ms):
         """Estimate halo mass via stellar mass."""
