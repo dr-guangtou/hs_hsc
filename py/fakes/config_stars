@@ -1,5 +1,0 @@
-import randomStarFakes
-
-root.fakes.retarget(randomStarFakes.RandomStarFakeSourcesTask)
-root.fakes.nStars=30
-root.fakes.magnitude=22.0
