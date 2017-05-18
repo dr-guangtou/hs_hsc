@@ -37,7 +37,7 @@ SEP = '-' * 100
 WAR = '!' * 100
 
 
-def saveImageArr(arr, header, name, clobber=True):
+def saveImageArr(arr, header, name, overwrite=True):
     """
     Just save an array to a fits file.
 
@@ -45,7 +45,7 @@ def saveImageArr(arr, header, name, clobber=True):
     """
     hduImg = fits.PrimaryHDU(arr, header=header)
     hduList = fits.HDUList([hduImg])
-    hduList.writeto(name, clobber=clobber)
+    hduList.writeto(name, overwrite=overwrite)
     hduList.close()
 
 

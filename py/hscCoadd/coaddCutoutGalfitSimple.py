@@ -425,7 +425,7 @@ def generateSubcomp(readFile, root=None, galfit=None, separate=True,
             compArr = subComp[i].data
             compHdu = fits.PrimaryHDU(compArr, header=subHeader)
             hduList = fits.HDUList([compHdu])
-            hduList.writeto(compFits, clobber=True)
+            hduList.writeto(compFits, overwrite=True)
 
     """ Remove the subcomp.fits file """
     os.remove(subFile)

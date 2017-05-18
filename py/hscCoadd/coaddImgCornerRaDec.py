@@ -132,7 +132,7 @@ def coaddImgCornersRaDec(root, filt, prefix=None):
     tabHdu = fits.TableHDU.from_columns(columns)
     priHdu = fits.PrimaryHDU([0])
     hduList = fits.HDUList([priHdu, tabHdu])
-    hduList.writeto(outFits, clobber=True)
+    hduList.writeto(outFits, overwrite=True)
 
     return columns
 

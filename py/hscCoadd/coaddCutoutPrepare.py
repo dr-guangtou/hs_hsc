@@ -442,7 +442,7 @@ def objList2Reg(objs, regName='ds9.reg', color='Blue'):
     regFile.close()
 
 
-def saveFits(img, fitsName, head=None, clobber=True):
+def saveFits(img, fitsName, head=None, overwrite=True):
     """
     Save an image to FITS file.
 
@@ -453,7 +453,7 @@ def saveFits(img, fitsName, head=None, clobber=True):
         imgHdu.header = head
     if os.path.islink(fitsName):
         os.unlink(fitsName)
-    imgHdu.writeto(fitsName, clobber=clobber)
+    imgHdu.writeto(fitsName, overwrite=overwrite)
 
 
 def saveSEPObjects(objs, prefix='sep_objects', csv=False,
