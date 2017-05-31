@@ -26,6 +26,7 @@ try:
     from scipy.stats import scoreatpercentile
 except:
     scoreatpercentile = False
+from scipy.stats import sigmaclip
 from scipy.interpolate import interp1d
 # Astropy
 from astropy.table import Table, Column
@@ -275,6 +276,54 @@ def getStackProfiles(sample,
         print("## Save %s to %s" % (name, outPkl))
 
     return profiles
+
+
+def sigClipStats(data, sigLow=3.0, sigUpp=3.0,
+                 limLow=None, limUpp=None):
+    """
+    Measure mean, median, and stddev after sigma clipping.
+    """
+    if limLow is not None:
+        data = data[data > limLow]
+    if limUpp is not None:
+        data = data[data < limUpp]
+
+    dataClip, dummy, dummy = sigmaclip(data, sigLow, sigUpp)
+
+    return (np.nanmean(dataClip),
+            np.nanmedian(dataClip),
+            np.nanstd(dataClip))
+
+
+def avgColorProf(cprofs, sigLow=3.0, sigUpp=3.0,
+                 limLow=None, limUpp=None,
+                 boxKernel=None, returnAll=False):
+    """
+    Estimate average color profiles after smoothing and sigma clipping.
+    """
+    nGal, nRad = cprofs.shape
+
+    cpTemp = copy.deepcopy(cprofs)
+
+    if boxKernel is not None:
+        for ii in range(nGal):
+            cpTemp[ii, :] = convolve(cprofs[ii, :],
+                                     Box1DKernel(boxKernel))
+
+    if limLow is not None:
+        cpTemp[cprofs < limLow] = np.nan
+    if limUpp is not None:
+        cpTemp[cprofs > limUpp] = np.nan
+
+    from astropy.stats import sigma_clipped_stats
+    avgProf, medProf, stdProf = sigma_clipped_stats(cpTemp,
+                                                    sigma_lower=sigLow,
+                                                    sigma_upper=sigUpp,
+                                                    axis=0)
+    if not returnAll:
+        return avgProf, medProf, stdProf
+    else:
+        return avgProf, medProf, stdProf, cpTemp
 
 
 def organizeSbp(profiles,
