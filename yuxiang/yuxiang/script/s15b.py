@@ -2750,7 +2750,8 @@ def getMassFunction(sample,
                            np.isfinite(sample[massErrCol]) &
                            (sample[massErrCol] > 0.0)]
         errArr = sampleUse[massErrCol].data
-    massArr = sampleUse[massCol]
+
+    massArr = np.asarray(sampleUse[massCol])
 
     dV = (COSMO.V(np.nanmin(sampleUse[zCol]), np.nanmax(sampleUse[zCol])) / (
         (360.0**2.0) / np.pi)) * area
