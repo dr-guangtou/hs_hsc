@@ -2667,6 +2667,28 @@ def bernardiLF(logL, model):
     return term1 * term2 + term3
 
 
+def bootstrapResample(X, n_boots=1000):
+    """
+    Bootstrap resample an array_like.
+    Borrowed from: http://nbviewer.jupyter.org/gist/aflaxman/6871948
+
+    Parameters
+    ----------
+    X : array_like
+      data to resample
+    n_boots : int, optional
+      Number of bootstrap resamples
+      default = 1000
+
+    Results
+    -------
+    returns X_resamples
+    """
+    return np.vstack(
+        X[np.floor(np.random.rand(len(X))*len(X)).astype(int)]
+        for ii in np.arange(n_boots)).T
+
+
 def singleMassFunction(massArr,
                        dV,
                        bins=20,
@@ -2700,6 +2722,7 @@ def getMassFunction(sample,
                     massCol='MSTAR',
                     massErrCol='MSTAR_ERR',
                     nResample=5000,
+                    resampleErr=False,
                     bins=20,
                     massLow=10.4,
                     binSize=0.1,
@@ -2737,9 +2760,17 @@ def getMassFunction(sample,
                                                      len(sample)))
         print("# The deltaVolume is %14.3f Mpc^3" % dV)
 
-    massTemp = np.asarray(
-        map(lambda mass, err: np.random.normal(mass, err, nResample), massArr,
-            errArr))
+    try:
+        if resampleErr:
+            massTemp = np.asarray(
+                map(lambda mass, err: np.random.normal(mass, err, nResample),
+                    massArr, errArr)
+                )
+        else:
+            massTemp = bootstrapResample(massArr, n_boots=nResample)
+    except Exception:
+        print(nResample)
+        raise Exception("# Can not resample the mass array!")
 
     dnMassResample = np.vstack(
         singleMassFunction(
