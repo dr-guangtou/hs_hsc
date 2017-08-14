@@ -292,7 +292,7 @@ def getDimming(z1, z0=0.1, factor=3.0):
         z0: Reference redshift
             Default = 0.1
     """
-    return (factor * np.log10((1.0 + z1) / (1.0 + z0)))
+    return (2.5 * factor * np.log10((1.0 + z1) / (1.0 + z0)))
 
 
 def getLuminosity(mag, redshift, extinction=None,
