@@ -31,7 +31,7 @@ def run(args):
                               colorFilters=args.colorFilters,
                               infoField1=args.infoField1,
                               infoField2=args.infoField2,
-                              saveSrc=args.saveSrc,
+                              saveSrc=False,
                               makeDir=args.makeDir,
                               raField=args.raField,
                               decField=args.decField,
