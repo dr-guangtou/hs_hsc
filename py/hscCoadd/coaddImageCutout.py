@@ -132,7 +132,7 @@ def previewCoaddImage(img, msk, var, det, sizeX=10, sizeY=10,
         numBox = len(oriX)
         for ii in range(numBox):
             box = mpatches.Rectangle((oriX[ii], oriY[ii]), boxW[ii], boxH[ii],
-                                     fc="none", ec=np.random.rand(3, 1),
+                                     fc="none", ec=np.random.rand(3,),
                                      linewidth=3.5, alpha=0.7,
                                      linestyle='dashed')
             ax3.add_patch(box)
