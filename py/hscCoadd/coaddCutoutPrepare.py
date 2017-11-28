@@ -287,7 +287,7 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
         for tick in ax.yaxis.get_major_ticks():
             tick.label1.set_fontsize(fontsize)
     # Save the figure
-    fig.savefig(outPNG)
+    fig.savefig(outPNG, dpi=80)
     plt.close(fig)
 
 
@@ -386,7 +386,7 @@ def showSEPImage(image, contrast=0.2, size=10, cmap=cmap1,
         ell3.set_linewidth(2.5)
         ell3.set_linestyle('dashed')
 
-    fig.savefig(pngName)
+    fig.savefig(pngName, dpi=80)
     plt.close(fig)
 
 
