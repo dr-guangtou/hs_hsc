@@ -10,8 +10,7 @@ Collection of useful tools .
 
 """
 
-from __future__ import (absolute_import, division,
-                        unicode_literals)
+from __future__ import (absolute_import, division, unicode_literals)
 import os
 import sys
 import numbers
@@ -23,14 +22,12 @@ import scipy.ndimage
 import scipy.interpolate
 try:
     from scipy.stats import scoreatpercentile
-except:
+except ImportError:
     scoreatpercentile = False
 # Astropy
 import astropy.units as u
-from astropy.io import fits
 from astropy.utils.misc import isiterable
 from astropy.coordinates import SkyCoord
-
 """ Path of the package"""
 __path__ = os.path.realpath(__file__)
 """ Path of the data directory"""
@@ -41,8 +38,6 @@ if not os.path.exists(__dataDir__):
 SIGMA1 = 0.3173
 SIGMA2 = 0.0455
 SIGMA3 = 0.0027
-
-
 """
 Angle related functions:
 
@@ -214,17 +209,20 @@ def radec2lb(ra, dec, radian=False, FK5=False):
     else:
         returnScalar = False
         if not FK5:
-            raDec = [SkyCoord(ra, dec, frame='icrs', unit='deg')
-                     for rrr, ddd in zip(ra, dec)]
+            raDec = [
+                SkyCoord(ra, dec, frame='icrs', unit='deg')
+                for rrr, ddd in zip(ra, dec)
+            ]
         else:
-            raDec = [SkyCoord(ra, dec, frame='fk5', unit='deg')
-                     for rrr, ddd in zip(ra, dec)]
-
+            raDec = [
+                SkyCoord(ra, dec, frame='fk5', unit='deg')
+                for rrr, ddd in zip(ra, dec)
+            ]
     """ Convert to galactic coordinates
         Currently, coordinates do not support arrays; have to loop.
     """
-    l = np.empty(len(raDec), dtype=np.float)
-    b = np.empty(len(raDec), dtype=np.float)
+    gal_l = np.empty(len(raDec), dtype=np.float)
+    gal_b = np.empty(len(raDec), dtype=np.float)
 
     for ii, cc in enumerate(raDec):
         gg = cc.galactic
@@ -232,16 +230,16 @@ def radec2lb(ra, dec, radian=False, FK5=False):
         # TODO: remove this hack once v0.3 is out (and array-ify this
         # whole thing)
         if radian:
-            l[ii] = gg.l.radian
-            b[ii] = gg.b.radian
+            gal_l[ii] = gg.l.radian
+            gal_b[ii] = gg.b.radian
         else:
-            l[ii] = gg.l.degree
-            b[ii] = gg.b.degree
+            gal_l[ii] = gg.l.degree
+            gal_b[ii] = gg.b.degree
 
     if returnScalar:
-        return l[0], b[0]
+        return gal_l[0], gal_b[0]
     else:
-        return l, b
+        return gal_l, gal_b
 
 
 def icrs2fk5(ra, dec, radian=False):
@@ -273,6 +271,7 @@ def fk52icrs(ra, dec, radian=False):
     else:
         return raDecFK5.ra.radian, raDecFK5.dec.radian
 
+
 """
 Image Visualization Related
 
@@ -280,37 +279,44 @@ Image Visualization Related
 """
 
 
-def zscale(img, contrast=0.25, samples=500):
+def zscale(img, contrast=0.25, samples=500, min_valid=5):
     """
     Image scaling function.
 
     form http://hsca.ipmu.jp/hscsphinx/scripts/psfMosaic.html
     """
-    ravel = img.ravel()
-    ravel = ravel[np.isfinite(ravel)]
+    img_ravel = img.ravel()
+    img_ravel = img_ravel[np.isfinite(img_ravel)]
 
-    if len(ravel) > samples:
-        imsort = np.sort(np.random.choice(ravel, size=samples))
+    if len(img_ravel) <= 2:
+        z1, z2 = -10.0, 10.0
+    elif len(img_ravel) <= min_valid:
+        z1, z2 = np.nanmin(img_ravel), np.max(img_ravel)
     else:
-        imsort = np.sort(ravel)
+        if len(img_ravel) > samples:
+            imsort = np.sort(np.random.choice(img_ravel, size=samples))
+        else:
+            imsort = np.sort(img_ravel)
 
-    n = len(imsort)
-    idx = np.arange(n)
+        n = len(imsort)
+        idx = np.arange(n)
+        med = imsort[int(n / 2)]
 
-    med = imsort[int(n/2)]
-    w = 0.25
-    i_lo, i_hi = int((0.5-w)*n), int((0.5+w)*n)
-    # BUG: Sometimes the polyfit could fail
-    try:
-        p = np.polyfit(idx[i_lo:i_hi], imsort[i_lo:i_hi], 1)
-        slope, intercept = p
-    except Exception:
-        slope = 1.0
+        w = 0.25
+        i_lo, i_hi = int((0.5 - w) * n), int((0.5 + w) * n)
+        try:
+            p = np.polyfit(idx[i_lo:i_hi], imsort[i_lo:i_hi], 1)
+            slope, intercept = p
+        except Exception:
+            slope = 1.0
 
-    z1 = med - (slope/contrast)*(n/2-n*w)
-    z2 = med + (slope/contrast)*(n/2-n*w)
+        z1 = med - (slope / contrast) * (n / 2 - n * w)
+        z2 = med + (slope / contrast) * (n / 2 - n * w)
 
-    return z1, z2
+    if z1 < z2:
+        return z1, z2
+    else:
+        return z1, z2 + (z1 - z2) + np.abs(z1 * 1E-3)
 
 
 """
@@ -369,8 +375,8 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
     if method == 'neighbour':
         for i in range(ndims):
             base = np.indices(newdims)[i]
-            dimlist.append((old[i] - m1) / (newdims[i] - m1) * (
-                           base + ofs) - ofs)
+            dimlist.append((old[i] - m1) / (newdims[i] - m1) * (base + ofs) -
+                           ofs)
         cd = np.array(dimlist).round().astype(int)
         newa = a[list(cd)]
         return newa
@@ -379,8 +385,8 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
         # calculate new dims
         for i in range(ndims):
             base = np.arange(newdims[i])
-            dimlist.append((old[i] - m1) / (newdims[i] - m1) * (
-                           base + ofs) - ofs)
+            dimlist.append((old[i] - m1) / (newdims[i] - m1) * (base + ofs) -
+                           ofs)
         # specify old dims
         olddims = [np.arange(i, dtype=np.float) for i in list(a.shape)]
 
@@ -438,7 +444,7 @@ def saveToPickle(array, name):
     """Save a numpy array to a cPickle/Pickle format binary file."""
     try:
         import cPickle as pickle
-    except:
+    except ImportError:
         import pickle
 
     output = open(name, 'w')
@@ -450,7 +456,7 @@ def saveToHickle(array, name):
     """Save a numpy array to a hickle/HDF5 format binary file."""
     try:
         import hickle
-    except:
+    except ImportError:
         raise Exception("### The Hickle package is required!")
 
     output = open(name, 'w')
@@ -469,7 +475,7 @@ def saveToCSV(array, name):
     output.write("#" + ', '.join(colNames) + '\n')
     for item in array:
         line = ''
-        for i in range(0, len(colNames)-1):
+        for i in range(0, len(colNames) - 1):
             col = colNames[i]
             line += str(item[col]) + ' , '
         line += str(item[colNames[-1]]) + '\n'
@@ -538,8 +544,12 @@ Cosmology Related
 """
 
 
-def cosmoDL(redshift, WMAP9=False, H0=70.0, Om0=0.30,
-            Planck15=False, kpc=False):
+def cosmoDL(redshift,
+            WMAP9=False,
+            H0=70.0,
+            Om0=0.30,
+            Planck15=False,
+            kpc=False):
     """
     Get the Luminosity Distance at redshift=z.
 
@@ -562,8 +572,12 @@ def cosmoDL(redshift, WMAP9=False, H0=70.0, Om0=0.30,
         return dl.to(u.kpc).value
 
 
-def cosmoDA(redshift, WMAP9=False, H0=70.0, Om0=0.30,
-            Planck15=False, kpc=False):
+def cosmoDA(redshift,
+            WMAP9=False,
+            H0=70.0,
+            Om0=0.30,
+            Planck15=False,
+            kpc=False):
     """
     Get the Angular Diameter Distance at redshift=z.
 
@@ -586,8 +600,7 @@ def cosmoDA(redshift, WMAP9=False, H0=70.0, Om0=0.30,
         return da.to(u.kpc).value
 
 
-def cosmoScale(redshift, WMAP9=False, H0=70.0, Om0=0.30,
-               Planck15=False):
+def cosmoScale(redshift, WMAP9=False, H0=70.0, Om0=0.30, Planck15=False):
     """
     Get the Angular Scale (kpc/") at redshift=z.
 
@@ -607,8 +620,7 @@ def cosmoScale(redshift, WMAP9=False, H0=70.0, Om0=0.30,
     return scale.value
 
 
-def cosmoDistMod(redshift, WMAP9=False, H0=70.0, Om0=0.30,
-                 Planck15=False):
+def cosmoDistMod(redshift, WMAP9=False, H0=70.0, Om0=0.30, Planck15=False):
     """
     Get the Distance Module at redshift=z.
 
@@ -628,8 +640,12 @@ def cosmoDistMod(redshift, WMAP9=False, H0=70.0, Om0=0.30,
     return dm.value
 
 
-def cosmoComVol(redshift, WMAP9=False, H0=70.0, Om0=0.30,
-                Planck15=False, Gpc=False):
+def cosmoComVol(redshift,
+                WMAP9=False,
+                H0=70.0,
+                Om0=0.30,
+                Planck15=False,
+                Gpc=False):
     """
     Get the Comoving Volume at redshift=z.
 
@@ -652,8 +668,7 @@ def cosmoComVol(redshift, WMAP9=False, H0=70.0, Om0=0.30,
         return v.to(u.Gpc).value
 
 
-def cosmodVol(redshift, WMAP9=False, H0=70.0, Om0=0.30,
-              Planck15=False):
+def cosmodVol(redshift, WMAP9=False, H0=70.0, Om0=0.30, Planck15=False):
     """
     Get the Differential Comoving Volume at redshift=z.
 
@@ -673,8 +688,12 @@ def cosmodVol(redshift, WMAP9=False, H0=70.0, Om0=0.30,
     return dv.value
 
 
-def cosmoAge(redshift, WMAP9=False, H0=70.0, Om0=0.30,
-             Planck15=False, Myr=False):
+def cosmoAge(redshift,
+             WMAP9=False,
+             H0=70.0,
+             Om0=0.30,
+             Planck15=False,
+             Myr=False):
     """
     Get the Age of the Universe at redshift=z.
 
@@ -697,8 +716,12 @@ def cosmoAge(redshift, WMAP9=False, H0=70.0, Om0=0.30,
         return age.to(u.Myr).value
 
 
-def cosmoLookBack(redshift, WMAP9=False, H0=70.0, Om0=0.30,
-                  Planck15=False, Myr=False):
+def cosmoLookBack(redshift,
+                  WMAP9=False,
+                  H0=70.0,
+                  Om0=0.30,
+                  Planck15=False,
+                  Myr=False):
     """
     Get the Look-back Time at redshift=z.
 
@@ -749,10 +772,10 @@ def getExtinction(ra, dec, a_lambda=None):
             # Then try sncosmo
             from sncosmo import SFD98Map
             dustDir = os.environ.get('DUST_DIR')
-            if (not os.path.isfile(os.path.join(dustDir,
-                                   'SFD_dust_4096_ngp.fits'))) or (
-                not os.path.isfile(os.path.join(dustDir,
-                                   'SFD_dust_4096_sgp.fits'))):
+            if (not os.path.isfile(
+                    os.path.join(dustDir, 'SFD_dust_4096_ngp.fits'))) or (
+                        not os.path.isfile(
+                            os.path.join(dustDir, 'SFD_dust_4096_sgp.fits'))):
                 print('# DUST_DIR : %s' % dustDir)
                 raise Exception("# Can not find the SFD dust map!")
             else:
@@ -775,8 +798,8 @@ def ellipDist(x, y, x0, y0, pa=0.0, q=0.9):
     """Distance to center in elliptical coordinate."""
     theta = (pa * np.pi / 180.0)
 
-    distA = ((x - x0) * np.cos(theta) + (y - y0) * np.sin(theta)) ** 2.0
-    distB = (((y - y0) * np.cos(theta) - (x - x0) * np.sin(theta)) / q) ** 2.0
+    distA = ((x - x0) * np.cos(theta) + (y - y0) * np.sin(theta))**2.0
+    distB = (((y - y0) * np.cos(theta) - (x - x0) * np.sin(theta)) / q)**2.0
 
     return np.sqrt(distA + distB)
 
@@ -819,12 +842,12 @@ def weighted_median(data, weights=None):
         below_midpoint_index = 0
         while cumulative_weight <= midpoint:
             below_midpoint_index += 1
-            cumulative_weight += sorted_weights[below_midpoint_index-1]
-        cumulative_weight -= sorted_weights[below_midpoint_index-1]
+            cumulative_weight += sorted_weights[below_midpoint_index - 1]
+        cumulative_weight -= sorted_weights[below_midpoint_index - 1]
         if cumulative_weight - midpoint < sys.float_info.epsilon:
-            bounds = sorted_data[below_midpoint_index-2:below_midpoint_index]
+            bounds = sorted_data[below_midpoint_index - 2:below_midpoint_index]
             return sum(bounds) / float(len(bounds))
-        return sorted_data[below_midpoint_index-1]
+        return sorted_data[below_midpoint_index - 1]
 
 
 def numpy_weighted_median(data, weights=None):
@@ -842,9 +865,9 @@ def numpy_weighted_median(data, weights=None):
         below_midpoint_index = np.where(cumulative_weight <= midpoint)[0][-1]
         if (cumulative_weight[below_midpoint_index] -
                 midpoint) < sys.float_info.epsilon:
-            return np.mean(sorted_data[below_midpoint_index:
-                                       below_midpoint_index+2])
-        return sorted_data[below_midpoint_index+1]
+            return np.mean(
+                sorted_data[below_midpoint_index:below_midpoint_index + 2])
+        return sorted_data[below_midpoint_index + 1]
 
 
 """
@@ -952,8 +975,11 @@ And: http://peterthomasweir.blogspot.jp/2014/03/
 """
 
 
-def confidence_interval_1d(A, alpha=SIGMA1, metric=np.mean,
-                           numResamples=10000, interpolate=True):
+def confidence_interval_1d(A,
+                           alpha=SIGMA1,
+                           metric=np.mean,
+                           numResamples=10000,
+                           interpolate=True):
     """Calculate confidence interval along one dimensional array."""
     if not isinstance(alpha, collections.Iterable):
         alpha = np.array([alpha])
@@ -961,31 +987,34 @@ def confidence_interval_1d(A, alpha=SIGMA1, metric=np.mean,
     N = len(A)
     resampleInds = np.random.randint(0, N, (numResamples, N))
     metricOfResampled = metric(A[resampleInds], axis=-1)
-    confidenceInterval = np.zeros(2*len(alpha), dtype='float')
+    confidenceInterval = np.zeros(2 * len(alpha), dtype='float')
 
     if interpolate:
         for thisAlphaInd, thisAlpha in enumerate(alpha):
             percenPos = (thisAlpha * 100 / 2.0)
             samplePos = scoreatpercentile(metricOfResampled, percenPos)
-            confidenceInterval[2*thisAlphaInd] = samplePos
+            confidenceInterval[2 * thisAlphaInd] = samplePos
             percenNeg = (100 - thisAlpha * 100 / 2.0)
             sampleNeg = scoreatpercentile(metricOfResampled, percenNeg)
-            confidenceInterval[2*thisAlphaInd+1] = sampleNeg
+            confidenceInterval[2 * thisAlphaInd + 1] = sampleNeg
     else:
         sortedMetricOfResampled = np.sort(metricOfResampled)
         for thisAlphaInd, thisAlpha in enumerate(alpha):
-            percenPos = int(round(thisAlpha*numResamples / 2.0))
+            percenPos = int(round(thisAlpha * numResamples / 2.0))
             samplePos = sortedMetricOfResampled[percenPos]
-            confidenceInterval[2*thisAlphaInd] = samplePos
-            percenNeg = int(round(numResamples -
-                                  (thisAlpha * numResamples / 2.0)))
+            confidenceInterval[2 * thisAlphaInd] = samplePos
+            percenNeg = int(
+                round(numResamples - (thisAlpha * numResamples / 2.0)))
             sampleNeg = sortedMetricOfResampled[percenNeg]
-            confidenceInterval[2*thisAlphaInd+1] = sampleNeg
+            confidenceInterval[2 * thisAlphaInd + 1] = sampleNeg
     return confidenceInterval
 
 
-def ma_confidence_interval_1d(A, alpha=.05, metric=np.mean,
-                              numResamples=1000, interpolate=True):
+def ma_confidence_interval_1d(A,
+                              alpha=.05,
+                              metric=np.mean,
+                              numResamples=1000,
+                              interpolate=True):
     """
     Confidence interval for 1-D array.
 
@@ -993,13 +1022,17 @@ def ma_confidence_interval_1d(A, alpha=.05, metric=np.mean,
     """
     A = np.ma.masked_invalid(A, copy=True)
     A = A.compressed()
-    confidenceInterval = confidence_interval_1d(A, alpha, metric,
-                                                numResamples, interpolate)
+    confidenceInterval = confidence_interval_1d(A, alpha, metric, numResamples,
+                                                interpolate)
     return confidenceInterval
 
 
-def confidence_interval(A, axis=None, alpha=.05, metric=np.mean,
-                        numResamples=1000, interpolate=True):
+def confidence_interval(A,
+                        axis=None,
+                        alpha=.05,
+                        metric=np.mean,
+                        numResamples=1000,
+                        interpolate=True):
     """
     Bootstrap confidence interval.
 
@@ -1052,10 +1085,14 @@ def confidence_interval(A, axis=None, alpha=.05, metric=np.mean,
     return outA
 
 
-def songPlotSetup(ax, border=4.5,
-                  xlabel=30, ylabel=30,
-                  majorTickL=12, minorTickL=8,
-                  majorTickW=4.5, minorTickW=4.0,
+def songPlotSetup(ax,
+                  border=4.5,
+                  xlabel=30,
+                  ylabel=30,
+                  majorTickL=12,
+                  minorTickL=8,
+                  majorTickW=4.5,
+                  minorTickW=4.0,
                   xtickFormat='$\mathbf{%g}$',
                   ytickFormat='$\mathbf{%g}$'):
     """Setup the format of the figure."""
@@ -1076,10 +1113,8 @@ def songPlotSetup(ax, border=4.5,
         tick.label.set_fontsize(ylabel)
 
     #  Tick Length and Width
-    ax.tick_params('both', length=majorTickL, width=majorTickW,
-                   which='major')
-    ax.tick_params('both', length=minorTickL, width=minorTickW,
-                   which='minor')
+    ax.tick_params('both', length=majorTickL, width=majorTickW, which='major')
+    ax.tick_params('both', length=minorTickL, width=minorTickW, which='minor')
 
     ax.xaxis.set_major_formatter(xtickFormat)
     ax.yaxis.set_major_formatter(ytickFormat)
@@ -1095,8 +1130,7 @@ def songPlotSetup(ax, border=4.5,
 """
 
 
-def removeIsNullCol(cat, output=None, catHdu=1,
-                    string='isnull'):
+def removeIsNullCol(cat, output=None, catHdu=1, string='isnull'):
     """Remove the xxx_isnull columns from the catalog."""
     from astropy.table import Table
     if not os.path.isfile(cat):
