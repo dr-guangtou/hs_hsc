@@ -151,7 +151,7 @@ def parseInputCatalog(input, sizeDefault=300, idField='index',
 
 
 def coaddBatchCutout(root, inCat, size=100, band='HSC-I',
-                     prefix='coadd_cutout', sample=None, idField='index'',
+                     prefix='coadd_cutout', sample=None, idField='index',
                      raField='ra', decField='dec', colorFilters='gri',
                      sizeField='size', zCutoutSize=False,
                      zField=None, verbose=True, noColor=False,
