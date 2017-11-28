@@ -295,7 +295,7 @@ def coaddBatchCutout(root, inCat, size=100, band='HSC-I',
                                  img_min=img_min, img_max=img_max, Q=Q)
 
 
-def singleCut(index, butler, root, useful, config):
+def singleCut(obj, butler, root, useful, config):
     """Make cutout for single object."""
     index, ra, dec, size, z, extr1, extr2 = useful
     band = config['band']
@@ -321,13 +321,13 @@ def singleCut(index, butler, root, useful, config):
     allFilters = config['allFilters']
 
     if verbose:
-        print "### %d -- ID: %s ; " % ((index + 1),
-                                       str(index[index])) + \
-              "RA: %10.5f DEC %10.5f ; Size: %d" % (ra[index],
-                                                    dec[index],
-                                                    size[index])
+        print "### %d -- ID: %s ; " % ((obj + 1),
+                                       str(index[obj])) + \
+              "RA: %10.5f DEC %10.5f ; Size: %d" % (ra[obj],
+                                                    dec[obj],
+                                                    size[obj])
     # New prefix
-    newPrefix = prefix + '_' + str(index[index]).strip()
+    newPrefix = prefix + '_' + str(index[obj]).strip()
     # Cutout Image
     if not onlyColor:
         if verbose:
@@ -345,7 +345,7 @@ def singleCut(index, butler, root, useful, config):
                     os.system('touch ' + logFile)
 
             if makeDir:
-                dirLoc = (str(index[index]).strip() + '/' +
+                dirLoc = (str(index[obj]).strip() + '/' +
                           str(filterUse).strip() + '/')
                 if not os.path.exists(dirLoc):
                     os.makedirs(dirLoc)
@@ -355,9 +355,9 @@ def singleCut(index, butler, root, useful, config):
 
             if saveSrc:
                 tempOut = coaddImageCutFull(root,
-                                            ra[index],
-                                            dec[index],
-                                            size[index],
+                                            ra[obj],
+                                            dec[obj],
+                                            size[obj],
                                             savePsf=True,
                                             saveSrc=True,
                                             visual=True,
@@ -368,9 +368,9 @@ def singleCut(index, butler, root, useful, config):
                 found, full, npatch = tempOut
             else:
                 tempOut = coaddImageCutFull(root,
-                                            ra[index],
-                                            dec[index],
-                                            size[index],
+                                            ra[obj],
+                                            dec[obj],
+                                            size[obj],
                                             savePsf=True,
                                             saveSrc=False,
                                             visual=True,
@@ -392,7 +392,7 @@ def singleCut(index, butler, root, useful, config):
             with open(logFile, "a") as logMatch:
                 logStr = "%10s   %s   %6s   %4s   %3d \n"
                 try:
-                    logMatch.write(logStr % (str(index[index]),
+                    logMatch.write(logStr % (str(index[obj]),
                                              filterUse,
                                              matchStatus,
                                              full, npatch))
@@ -413,7 +413,7 @@ def singleCut(index, butler, root, useful, config):
                         os.system('touch ' + logFilter)
 
                 if makeDir:
-                    dirLoc = (str(index[index]).strip() + '/' +
+                    dirLoc = (str(index[obj]).strip() + '/' +
                               str(filterUse).strip() + '/')
                     if not os.path.exists(dirLoc):
                         os.makedirs(dirLoc)
@@ -423,9 +423,9 @@ def singleCut(index, butler, root, useful, config):
 
                 if saveSrc:
                     tempOut = coaddImageCutFull(root,
-                                                ra[index],
-                                                dec[index],
-                                                size[index],
+                                                ra[obj],
+                                                dec[obj],
+                                                size[obj],
                                                 savePsf=True,
                                                 saveSrc=True,
                                                 visual=True,
@@ -436,9 +436,9 @@ def singleCut(index, butler, root, useful, config):
                     found, full, npatch = tempOut
                 else:
                     tempOut = coaddImageCutFull(root,
-                                                ra[index],
-                                                dec[index],
-                                                size[index],
+                                                ra[obj],
+                                                dec[obj],
+                                                size[obj],
                                                 savePsf=True,
                                                 saveSrc=False,
                                                 visual=True,
@@ -460,7 +460,7 @@ def singleCut(index, butler, root, useful, config):
                 with open(logFilter, "a") as logMatch:
                     logStr = "%5d   %s   %6s   %4s   %3d \n"
                     try:
-                        logMatch.write(logStr % (index[index],
+                        logMatch.write(logStr % (index[obj],
                                                  filterUse,
                                                  matchStatus,
                                                  full, npatch))
@@ -471,16 +471,16 @@ def singleCut(index, butler, root, useful, config):
     # Color Image
     # Whether put redshift on the image
     if (zField is not None) and (z is not None):
-        info1 = "z=%5.3f" % z[index]
+        info1 = "z=%5.3f" % z[obj]
     else:
         info1 = None
     # Extra information
     if (infoField1 is not None) and (extr1 is not None):
-        info2 = str(extr1[index]).strip()
+        info2 = str(extr1[obj]).strip()
     else:
         info2 = None
     if (infoField2 is not None) and (extr2 is not None):
-        info3 = str(extr2[index]).strip()
+        info3 = str(extr2[obj]).strip()
     else:
         info3 = None
 
@@ -488,13 +488,13 @@ def singleCut(index, butler, root, useful, config):
         if noName:
             name = None
         else:
-            name = str(index[index])
+            name = str(index[obj])
         if verbose:
             print "### Generate Color Image !"
         if clean:
             coaddColourImageFull(root,
-                                 ra[index], dec[index],
-                                 size[index],
+                                 ra[obj], dec[obj],
+                                 size[obj],
                                  filt=colorFilters,
                                  prefix=newPrefix, name=None,
                                  info1=None, info2=None,
@@ -504,8 +504,8 @@ def singleCut(index, butler, root, useful, config):
                                  butler=butler)
         else:
             coaddColourImageFull(root,
-                                 ra[index], dec[index],
-                                 size[index],
+                                 ra[obj], dec[obj],
+                                 size[obj],
                                  filt=colorFilters,
                                  prefix=newPrefix, name=name,
                                  info1=info1, info2=info2,
@@ -517,11 +517,11 @@ def singleCut(index, butler, root, useful, config):
         if noName:
             name = None
         else:
-            name = str(index[index])
+            name = str(index[obj])
         if verbose:
             print "### Generate Color Image !"
-        coaddColourImageFull(root, ra[index],
-                             dec[index], size[index],
+        coaddColourImageFull(root, ra[obj],
+                             dec[obj], size[obj],
                              filt=colorFilters,
                              prefix=newPrefix, name=name,
                              info1=info1, info2=info2, info3=info3,
