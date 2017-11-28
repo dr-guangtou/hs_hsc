@@ -20,6 +20,15 @@ from astroML.plotting import hist
 
 # Matplotlib related
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+# SEP
+import sep
+
+# Personal
+import hscUtils as hUtil
+import coaddCutoutPrepare as cdPrep
+
 mpl.use('Agg')
 mpl.rcParams['figure.figsize'] = 12, 10
 mpl.rcParams['xtick.major.size'] = 8.0
@@ -31,15 +40,7 @@ mpl.rcParams['ytick.major.width'] = 1.5
 mpl.rcParams['ytick.minor.size'] = 4.0
 mpl.rcParams['ytick.minor.width'] = 1.5
 mpl.rc('axes', linewidth=2)
-import matplotlib.pyplot as plt
 plt.ioff()
-
-# SEP
-import sep
-
-# Personal
-import hscUtils as hUtil
-import coaddCutoutPrepare as cdPrep
 
 COM = '#' * 100
 SEP = '-' * 100
@@ -86,9 +87,16 @@ def readCutout(prefix, root=None, exMask=None, verbose=True):
     return imgArr, imgHead, mskArr
 
 
-def showSkyHist(skypix, skypix2=None, skypix3=None,
-                sbExpt=None, pngName='skyhist.png', skyAvg=None, skyStd=None,
-                skyMed=None, skySkw=None, savePng=True):
+def showSkyHist(skypix,
+                skypix2=None,
+                skypix3=None,
+                sbExpt=None,
+                pngName='skyhist.png',
+                skyAvg=None,
+                skyStd=None,
+                skyMed=None,
+                skySkw=None,
+                savePng=True):
     """
     Plot the distribution of sky pixels.
 
@@ -96,8 +104,7 @@ def showSkyHist(skypix, skypix2=None, skypix3=None,
     """
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(111)
-    fig.subplots_adjust(hspace=0.1, wspace=0.1,
-                        top=0.95, right=0.95)
+    fig.subplots_adjust(hspace=0.1, wspace=0.1, top=0.95, right=0.95)
     fontsize = 18
     ax.minorticks_on()
 
@@ -106,18 +113,35 @@ def showSkyHist(skypix, skypix2=None, skypix3=None,
     for tick in ax.yaxis.get_major_ticks():
         tick.label1.set_fontsize(fontsize)
 
-    counts1, bins1, patches1 = hist(skypix, bins='knuth', ax=ax, alpha=0.4,
-                                    color='cyan', histtype='stepfilled',
-                                    normed=True)
+    counts1, bins1, patches1 = hist(
+        skypix,
+        bins='knuth',
+        ax=ax,
+        alpha=0.4,
+        color='cyan',
+        histtype='stepfilled',
+        normed=True)
     if skypix2 is not None:
-        counts2, bins2, patches2 = hist(skypix2, bins='knuth', ax=ax,
-                                        alpha=0.9, color='k', histtype='step',
-                                        normed=True, linewidth=2)
+        counts2, bins2, patches2 = hist(
+            skypix2,
+            bins='knuth',
+            ax=ax,
+            alpha=0.9,
+            color='k',
+            histtype='step',
+            normed=True,
+            linewidth=2)
     if skypix3 is not None:
-        counts3, bins3, patches3 = hist(skypix3, bins='knuth', ax=ax,
-                                        alpha=0.8, color='k', histtype='step',
-                                        normed=True, linewidth=2,
-                                        linestyle='dashed')
+        counts3, bins3, patches3 = hist(
+            skypix3,
+            bins='knuth',
+            ax=ax,
+            alpha=0.8,
+            color='k',
+            histtype='step',
+            normed=True,
+            linewidth=2,
+            linestyle='dashed')
     # Horizontal line
     ax.axvline(0.0, linestyle='-', color='k', linewidth=1.5)
 
@@ -140,21 +164,25 @@ def showSkyHist(skypix, skypix2=None, skypix3=None,
     ax.set_xlabel('Pixel Value', fontsize=20)
     ax.set_xlim(skyAvg - 4.0 * skyStd, skyAvg + 5.0 * skyStd)
     # Show a few information
-    ax.text(0.7, 0.9, "Min : %8.4f" %
-            skyMin, fontsize=21, transform=ax.transAxes)
-    ax.text(0.7, 0.8, "Max : %8.4f" %
-            skyMax, fontsize=21, transform=ax.transAxes)
-    ax.text(0.7, 0.7, "Avg : %8.4f" %
-            skyAvg, fontsize=21, transform=ax.transAxes)
-    ax.text(0.7, 0.6, "Std : %8.4f" %
-            skyStd, fontsize=21, transform=ax.transAxes)
-    ax.text(0.7, 0.5, "Med : %8.4f" %
-            skyMed, fontsize=21, transform=ax.transAxes)
-    ax.text(0.7, 0.4, "Skew: %8.4f" %
-            skySkw, fontsize=21, transform=ax.transAxes)
+    ax.text(
+        0.7, 0.9, "Min : %8.4f" % skyMin, fontsize=21, transform=ax.transAxes)
+    ax.text(
+        0.7, 0.8, "Max : %8.4f" % skyMax, fontsize=21, transform=ax.transAxes)
+    ax.text(
+        0.7, 0.7, "Avg : %8.4f" % skyAvg, fontsize=21, transform=ax.transAxes)
+    ax.text(
+        0.7, 0.6, "Std : %8.4f" % skyStd, fontsize=21, transform=ax.transAxes)
+    ax.text(
+        0.7, 0.5, "Med : %8.4f" % skyMed, fontsize=21, transform=ax.transAxes)
+    ax.text(
+        0.7, 0.4, "Skew: %8.4f" % skySkw, fontsize=21, transform=ax.transAxes)
     if sbExpt is not None:
-        ax.text(0.7, 0.3, "S.B : %8.5f" %
-                sbExpt, fontsize=21, transform=ax.transAxes)
+        ax.text(
+            0.7,
+            0.3,
+            "S.B : %8.5f" % sbExpt,
+            fontsize=21,
+            transform=ax.transAxes)
 
     if savePng:
         fig.savefig(pngName, dpi=70)
@@ -181,10 +209,21 @@ def getRadBoxSky(imgArr, mskArr):
     pass
 
 
-def getSEPSky(imgArr, mskArr, imgHead, skyClip=3, zp=27.0, pix=0.168,
-              rebin=4, prefix='sep_sky', suffix='imgsub',
-              verbose=True, visual=True, bkgSize=40, bkgFilter=5,
-              saveBkg=False, nClip=2):
+def getSEPSky(imgArr,
+              mskArr,
+              imgHead,
+              skyClip=3,
+              zp=27.0,
+              pix=0.168,
+              rebin=4,
+              prefix='sep_sky',
+              suffix='imgsub',
+              verbose=True,
+              visual=True,
+              bkgSize=40,
+              bkgFilter=5,
+              saveBkg=False,
+              nClip=2):
     """
     Estimating the background using SEP.
 
@@ -194,6 +233,7 @@ def getSEPSky(imgArr, mskArr, imgHead, skyClip=3, zp=27.0, pix=0.168,
         print SEP
         print "### ESTIMATING THE GLOBAL BACKGROUND AND SURFACE \
                 BRIGHTNESS LIMIT"
+
     dimX, dimY = imgArr.shape
     mskX, mskY = mskArr.shape
     if (dimX != mskX) or (dimY != mskY):
@@ -203,13 +243,13 @@ def getSEPSky(imgArr, mskArr, imgHead, skyClip=3, zp=27.0, pix=0.168,
     imgMasked = copy.deepcopy(imgArr)
     imgMasked[mskArr > 0] = np.nan
     try:
-        sepBkg = sep.Background(imgMasked, bw=bkgSize, bh=bkgSize,
-                                fw=bkgFilter, fh=bkgFilter)
+        sepBkg = sep.Background(
+            imgMasked, bw=bkgSize, bh=bkgSize, fw=bkgFilter, fh=bkgFilter)
     except ValueError:
         imgTemp = copy.deepcopy(imgMasked)
         imgTemp = imgTemp.byteswap(True).newbyteorder()
-        sepBkg = sep.Background(imgTemp, bw=bkgSize, bh=bkgSize,
-                                fw=bkgFilter, fh=bkgFilter)
+        sepBkg = sep.Background(
+            imgTemp, bw=bkgSize, bh=bkgSize, fw=bkgFilter, fh=bkgFilter)
 
     avgBkg = sepBkg.globalback
     rmsBkg = sepBkg.globalrms
@@ -287,9 +327,17 @@ def getSEPSky(imgArr, mskArr, imgHead, skyClip=3, zp=27.0, pix=0.168,
     return imgSub
 
 
-def getGlobalSky(imgArr, mskAll, skyClip=3, zp=27.0, pix=0.168,
-                 rebin=4, prefix='coadd_sky', suffix='global_',
-                 verbose=True, visual=True, nClip=2):
+def getGlobalSky(imgArr,
+                 mskAll,
+                 skyClip=3,
+                 zp=27.0,
+                 pix=0.168,
+                 rebin=4,
+                 prefix='coadd_sky',
+                 suffix='global_',
+                 verbose=True,
+                 visual=True,
+                 nClip=2):
     """
     Estimate the Global Sky.
 
@@ -305,6 +353,7 @@ def getGlobalSky(imgArr, mskAll, skyClip=3, zp=27.0, pix=0.168,
         print SEP
         print "### ESTIMATING THE GLOBAL BACKGROUND AND SURFACE \
                 BRIGHTNESS LIMIT"
+
     dimX, dimY = imgArr.shape
     # Pixel values of all pixels that are not masked out (before rebinned)
     pixels = imgArr[mskAll == 0].flatten()
@@ -367,10 +416,15 @@ def getGlobalSky(imgArr, mskAll, skyClip=3, zp=27.0, pix=0.168,
         print "###    SB. Expect: %8.2f" % sbExpt
     if visual:
         skyPNG = prefix + '_' + suffix + 'skyhist.png'
-        showSkyHist(pixNoMskBin, skypix2=pixNoMsk, sbExpt=sbExpt,
-                    pngName=skyPNG, skyAvg=skyAvg, skyMed=skyMed,
-                    skyStd=skyStd, skySkw=skySkw)
-
+        showSkyHist(
+            pixNoMskBin,
+            skypix2=pixNoMsk,
+            sbExpt=sbExpt,
+            pngName=skyPNG,
+            skyAvg=skyAvg,
+            skyMed=skyMed,
+            skyStd=skyStd,
+            skySkw=skySkw)
     """Save a txt file summary"""
     skyTxt = prefix + '_' + suffix + 'sky.dat'
     text_file = open(skyTxt, "w")
@@ -387,10 +441,19 @@ def getGlobalSky(imgArr, mskAll, skyClip=3, zp=27.0, pix=0.168,
     return numSkyPix, skyMed, skyAvg, skyStd, skySkw, sbExpt
 
 
-def coaddCutoutSky(prefix, root=None, verbose=True, skyClip=3.0,
-                   pix=0.168, zp=27.0, rebin=6, visual=True,
-                   exMask=None, bkgSize=40, bkgFilter=5,
-                   saveBkg=False, nClip=2):
+def coaddCutoutSky(prefix,
+                   root=None,
+                   verbose=True,
+                   skyClip=3.0,
+                   pix=0.168,
+                   zp=27.0,
+                   rebin=6,
+                   visual=True,
+                   exMask=None,
+                   bkgSize=40,
+                   bkgFilter=5,
+                   saveBkg=False,
+                   nClip=2):
     """
     Estimate the Sky Background for Coadd Image.
 
@@ -416,19 +479,37 @@ def coaddCutoutSky(prefix, root=None, verbose=True, skyClip=3.0,
     mskArr[np.isnan(imgArr)] = 1
 
     # 1. SEP Sky
-    imgSub = getSEPSky(imgArr, mskArr, imgHead,
-                       skyClip=skyClip, zp=zp, pix=pix,
-                       rebin=rebin, prefix=(root + prefix), suffix='imgsub',
-                       verbose=True, visual=True, bkgSize=bkgSize,
-                       bkgFilter=bkgFilter, saveBkg=saveBkg,
-                       nClip=nClip)
+    imgSub = getSEPSky(
+        imgArr,
+        mskArr,
+        imgHead,
+        skyClip=skyClip,
+        zp=zp,
+        pix=pix,
+        rebin=rebin,
+        prefix=(root + prefix),
+        suffix='imgsub',
+        verbose=True,
+        visual=True,
+        bkgSize=bkgSize,
+        bkgFilter=bkgFilter,
+        saveBkg=saveBkg,
+        nClip=nClip)
 
     # 2. Global Background Estimation
     suffixGlob = 'rebin' + str(rebin).strip() + '_'
-    skyGlobal = getGlobalSky(imgSub, mskArr, skyClip=skyClip,
-                             zp=zp, pix=pix, rebin=rebin,
-                             prefix=(root + prefix), suffix=suffixGlob,
-                             visual=visual, verbose=verbose, nClip=nClip)
+    skyGlobal = getGlobalSky(
+        imgSub,
+        mskArr,
+        skyClip=skyClip,
+        zp=zp,
+        pix=pix,
+        rebin=rebin,
+        prefix=(root + prefix),
+        suffix=suffixGlob,
+        visual=visual,
+        verbose=verbose,
+        nClip=nClip)
 
     return skyGlobal
 
@@ -437,42 +518,76 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("prefix", help="Prefix of the cutout image files")
-    parser.add_argument('-r', '--root', dest='root',
-                        help='Path to the image files', default=None)
-    parser.add_argument('-m', '--mask', help="External file for image mask",
-                        default=None)
-    parser.add_argument('--skyclip', dest='skyClip',
-                        help='Sigma for pixel clipping',
-                        type=float, default=3.0)
-    parser.add_argument('--rebin', dest='rebin',
-                        help='Rebin the image by N x N pixels',
-                        type=int, default=6)
-    parser.add_argument('--bkgSize', dest='bkgSize',
-                        help='Background size for SEP',
-                        type=int, default=40)
-    parser.add_argument('--bkgFilter', dest='bkgFilter',
-                        help='Background filter size for SEP',
-                        type=int, default=5)
-    parser.add_argument('--pix', dest='pix', help='Pixel scale of the iamge',
-                        type=float, default=0.168)
-    parser.add_argument('--zp', dest='zp',
-                        help='Photometric zeropoint of the image',
-                        type=float, default=27.0)
-    parser.add_argument('--verbose', dest='verbose',
-                        action="store_true", default=True)
-    parser.add_argument('--visual', dest='visual',
-                        action="store_true", default=True)
-    parser.add_argument('--nClip', dest='nClip',
-                        help='Number of iterations for clipping',
-                        type=int, default=2)
-    parser.add_argument('--saveBkg', dest='saveBkg',
-                        action="store_true", default=False)
+    parser.add_argument(
+        '-r',
+        '--root',
+        dest='root',
+        help='Path to the image files',
+        default=None)
+    parser.add_argument(
+        '-m', '--mask', help="External file for image mask", default=None)
+    parser.add_argument(
+        '--skyclip',
+        dest='skyClip',
+        help='Sigma for pixel clipping',
+        type=float,
+        default=3.0)
+    parser.add_argument(
+        '--rebin',
+        dest='rebin',
+        help='Rebin the image by N x N pixels',
+        type=int,
+        default=6)
+    parser.add_argument(
+        '--bkgSize',
+        dest='bkgSize',
+        help='Background size for SEP',
+        type=int,
+        default=40)
+    parser.add_argument(
+        '--bkgFilter',
+        dest='bkgFilter',
+        help='Background filter size for SEP',
+        type=int,
+        default=5)
+    parser.add_argument(
+        '--pix',
+        dest='pix',
+        help='Pixel scale of the iamge',
+        type=float,
+        default=0.168)
+    parser.add_argument(
+        '--zp',
+        dest='zp',
+        help='Photometric zeropoint of the image',
+        type=float,
+        default=27.0)
+    parser.add_argument(
+        '--verbose', dest='verbose', action="store_true", default=True)
+    parser.add_argument(
+        '--visual', dest='visual', action="store_true", default=True)
+    parser.add_argument(
+        '--nClip',
+        dest='nClip',
+        help='Number of iterations for clipping',
+        type=int,
+        default=2)
+    parser.add_argument(
+        '--saveBkg', dest='saveBkg', action="store_true", default=False)
 
     args = parser.parse_args()
 
-    coaddCutoutSky(args.prefix, root=args.root, pix=args.pix, zp=args.zp,
-                   rebin=args.rebin, skyClip=args.skyClip,
-                   verbose=args.verbose, visual=args.visual,
-                   exMask=args.mask, bkgSize=args.bkgSize,
-                   bkgFilter=args.bkgFilter, saveBkg=args.saveBkg,
-                   nClip=args.nClip)
+    coaddCutoutSky(
+        args.prefix,
+        root=args.root,
+        pix=args.pix,
+        zp=args.zp,
+        rebin=args.rebin,
+        skyClip=args.skyClip,
+        verbose=args.verbose,
+        visual=args.visual,
+        exMask=args.mask,
+        bkgSize=args.bkgSize,
+        bkgFilter=args.bkgFilter,
+        saveBkg=args.saveBkg,
+        nClip=args.nClip)
