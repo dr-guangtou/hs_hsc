@@ -21,7 +21,7 @@ def run(args):
     if os.path.isfile(args.incat):
         cbc.coaddBatchCutFull(args.root, args.incat,
                               size=args.size,
-                              filter=args.filter,
+                              band=args.band,
                               idField=args.idField,
                               prefix=args.prefix,
                               zCutoutSize=zCut,
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     parser.add_argument("incat", help="The input catalog for cutout")
     parser.add_argument("-s", '--size', dest='size', type=int,
                         help="Half size of the cutout box", default=200)
-    parser.add_argument('-f', '--filter', dest='filter', help="Filter",
+    parser.add_argument('-f', '--filter', dest='band', help="Filter",
                         default='HSC-I')
     parser.add_argument('-cf', '--color-filters', dest='colorFilters',
                         help="Choice of filters for color images",
