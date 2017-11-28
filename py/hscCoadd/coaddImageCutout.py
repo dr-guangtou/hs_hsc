@@ -19,12 +19,14 @@ import lsst.afw.table as afwTable
 # Astropy
 from astropy import wcs as apWcs
 from astropy.io import fits
-# The CubeHelix color scheme
-import cubehelix
 # Matplotlib
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+# Default colormap
+viridis = plt.get_cmap('viridis')
+viridis.set_bad('k', 1.)
+viridis_r = plt.get_cmap('viridis_r')
 plt.ioff()
 import matplotlib.patches as mpatches
 
@@ -72,17 +74,13 @@ def previewCoaddImage(img, msk, var, det, sizeX=10, sizeY=10,
     fig, axes = plt.subplots(sharex=True, sharey=True,
                              figsize=(sizeX, sizeY))
     # Image
-    cmap = cubehelix.cmap(start=0.5, rot=-0.8,
-                          minSat=1.2, maxSat=1.2,
-                          minLight=0., maxLight=1.,
-                          gamma=1.0)
-    cmap.set_bad('k', 1.)
-
-    imin, imax = hUtil.zscale(img, contrast=0.05, samples=500)
+    imin, imax = hUtil.zscale(np.arcsinh(img),
+                              contrast=0.05, samples=500)
+    imax += 0.001
 
     ax1 = plt.subplot(2, 2, 1)
     ax1.imshow(np.arcsinh(img), interpolation="none",
-               vmin=imin, vmax=imax, cmap=cmap, origin='lower')
+               vmin=imin, vmax=imax, cmap=viridis, origin='lower')
     ax1.minorticks_on()
     ax1.xaxis.set_visible(False)
     ax1.yaxis.set_visible(False)
@@ -95,18 +93,13 @@ def previewCoaddImage(img, msk, var, det, sizeX=10, sizeY=10,
     ax1.margins(0.00, 0.00, tight=True)
 
     # Variance
-    cmap = cubehelix.cmap(start=0.5, rot=-0.8, reverse=True,
-                          minSat=1.1, maxSat=1.2,
-                          minLight=0., maxLight=1., gamma=0.5)
-    cmap.set_bad('k', 1.)
-
-    smin, smax = hUtil.zscale(var, contrast=0.1, samples=500)
-    if (smax < smin * 1.001):
-        smax = smin * 1.001
+    smin, smax = hUtil.zscale(np.arcsinh(var),
+                              contrast=0.05, samples=500)
+    smax += 0.01
 
     ax2 = plt.subplot(2, 2, 2)
     ax2.imshow(np.arcsinh(var), interpolation="none",
-               vmin=smin, vmax=smax, cmap=cmap, origin='lower')
+               vmin=smin, vmax=smax, cmap=viridis, origin='lower')
 
     ax2.minorticks_on()
     ax2.xaxis.set_visible(False)
@@ -117,7 +110,7 @@ def previewCoaddImage(img, msk, var, det, sizeX=10, sizeY=10,
 
     # Mask
     ax3 = plt.subplot(2, 2, 3)
-    ax3.imshow((msk * 2) + det, cmap=cubehelix.cmap(reverse=True),
+    ax3.imshow((msk * 2) + det, cmap=viridis_r,
                origin='lower')
 
     ax3.minorticks_on()
@@ -132,8 +125,8 @@ def previewCoaddImage(img, msk, var, det, sizeX=10, sizeY=10,
         numBox = len(oriX)
         for ii in range(numBox):
             box = mpatches.Rectangle((oriX[ii], oriY[ii]), boxW[ii], boxH[ii],
-                                     fc="none", ec=np.random.rand(3,),
-                                     linewidth=3.5, alpha=0.7,
+                                     fc="none", ec='r',
+                                     linewidth=3.5, alpha=0.6,
                                      linestyle='dashed')
             ax3.add_patch(box)
 
@@ -141,13 +134,12 @@ def previewCoaddImage(img, msk, var, det, sizeX=10, sizeY=10,
     imgMsk = copy.deepcopy(img)
     imgMsk[(msk > 0) | (det > 0)] = np.nan
 
-    mmin, mmax = hUtil.zscale(img, contrast=0.75, samples=500)
-    cmap = cubehelix.cmap(start=0.5, rot=-0.8, minSat=1.2, maxSat=1.2,
-                          minLight=0., maxLight=1., gamma=1.0)
-    cmap.set_bad('k', 1.)
+    mmin, mmax = hUtil.zscale(np.arcsinh(img),
+                              contrast=0.75, samples=500)
+    mmax += 0.01
     ax4 = plt.subplot(2, 2, 4)
     ax4.imshow(np.arcsinh(imgMsk), interpolation="none",
-               vmin=mmin, vmax=mmax, cmap=cmap, origin='lower')
+               vmin=mmin, vmax=mmax, cmap=viridis, origin='lower')
     ax4.minorticks_on()
     ax4.xaxis.set_visible(False)
     ax4.yaxis.set_visible(False)
