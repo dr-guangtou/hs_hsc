@@ -14,8 +14,8 @@ import lsst.afw.coord as afwCoord
 import lsst.afw.image as afwImage
 
 import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
+mpl.use('Agg')
 plt.ioff()
 
 COM = '#' * 100
@@ -36,15 +36,23 @@ def getCircleRaDec(ra, dec, size):
     decList = dec + sizeDegree * np.sin(phi)
 
     # Also include the center
-    raList = np.append(raList,  ra)
+    raList = np.append(raList, ra)
     decList = np.append(decList, dec)
 
     return raList, decList
 
 
-def saveRgbPng(outRgb, imgRgb, cenMark=False, xCen=None, yCen=None,
-               name=None, info1=None, info2=None, info3=None,
-               sLength=None, sString=None):
+def saveRgbPng(outRgb,
+               imgRgb,
+               cenMark=False,
+               xCen=None,
+               yCen=None,
+               name=None,
+               info1=None,
+               info2=None,
+               info3=None,
+               sLength=None,
+               sString=None):
     """Save the RGB image as a PNG figure."""
     # Decide the image size
     sizeX, sizeY, dim = imgRgb.shape
@@ -53,8 +61,7 @@ def saveRgbPng(outRgb, imgRgb, cenMark=False, xCen=None, yCen=None,
     sizeX = sizeX if sizeX > 6 else 6
     sizeY = sizeY if sizeY > 6 else 6
 
-    fig = plt.figure(figsize=(sizeX, sizeY),
-                     dpi=100, frameon=False)
+    fig = plt.figure(figsize=(sizeX, sizeY), dpi=100, frameon=False)
 
     # Show the image
     ax = fig.add_axes([0, 0, 1, 1])
@@ -66,33 +73,77 @@ def saveRgbPng(outRgb, imgRgb, cenMark=False, xCen=None, yCen=None,
     ax.yaxis.set_visible(False)
     # Highlight the new center: TODO
     if cenMark and (xCen is not None) and (yCen is not None):
-        ax.scatter(xCen, yCen, s=80, lw=0.5, marker='o', edgecolors='r',
-                   facecolors='none')
+        ax.scatter(
+            xCen,
+            yCen,
+            s=80,
+            lw=0.5,
+            marker='o',
+            edgecolors='r',
+            facecolors='none')
 
     # Add some information on the image
     if name is not None:
-        ax.text(0.5, 0.10, name, fontsize=20, fontweight='bold',
-                ha='center', va='center', color='w',
-                transform=ax.transAxes)
+        ax.text(
+            0.5,
+            0.10,
+            name,
+            fontsize=20,
+            fontweight='bold',
+            ha='center',
+            va='center',
+            color='w',
+            transform=ax.transAxes)
     if info1 is not None:
-        ax.text(0.8, 0.90, info1, fontsize=18, fontweight='bold',
-                ha='center', va='center', color='w',
-                transform=ax.transAxes)
+        ax.text(
+            0.8,
+            0.90,
+            info1,
+            fontsize=18,
+            fontweight='bold',
+            ha='center',
+            va='center',
+            color='w',
+            transform=ax.transAxes)
     if info2 is not None:
-        ax.text(0.8, 0.82, info2, fontsize=18, fontweight='bold',
-                ha='center', va='center', color='w',
-                transform=ax.transAxes)
+        ax.text(
+            0.8,
+            0.82,
+            info2,
+            fontsize=18,
+            fontweight='bold',
+            ha='center',
+            va='center',
+            color='w',
+            transform=ax.transAxes)
     if info3 is not None:
-        ax.text(0.8, 0.74, info3, fontsize=18, fontweight='bold',
-                ha='center', va='center', color='w',
-                transform=ax.transAxes)
+        ax.text(
+            0.8,
+            0.74,
+            info3,
+            fontsize=18,
+            fontweight='bold',
+            ha='center',
+            va='center',
+            color='w',
+            transform=ax.transAxes)
     if sLength is not None:
-        ax.plot([0.14, 0.14+sLength], [0.88, 0.88], 'w-', lw=2.5,
-                transform=ax.transAxes)
+        ax.plot(
+            [0.14, 0.14 + sLength], [0.88, 0.88],
+            'w-',
+            lw=2.5,
+            transform=ax.transAxes)
         if sString is not None:
-            ax.text((0.28 + sLength)/2.0, 0.85, sString, fontsize=15,
-                    ha='center', va='center', color='w',
-                    fontweight='bold', transform=ax.transAxes)
+            ax.text(
+                (0.28 + sLength) / 2.0,
+                0.85,
+                sString,
+                fontsize=15,
+                ha='center',
+                va='center',
+                color='w',
+                fontweight='bold',
+                transform=ax.transAxes)
 
     ax.margins(0.00, 0.00, tight=True)
 
@@ -110,10 +161,22 @@ def isHscFilter(filter, short=True):
     return (filter in hscFilters)
 
 
-def coaddColourImage(root, ra, dec, size, filt='gri',
-                     prefix='hsc_coadd_cutout', info1=None, info2=None,
-                     info3=None, min=-0.0, max=0.70, Q=10, name=None,
-                     localMax=True, scaleBar=10, butler=None):
+def coaddColourImage(root,
+                     ra,
+                     dec,
+                     size,
+                     filt='gri',
+                     prefix='hsc_coadd_cutout',
+                     info1=None,
+                     info2=None,
+                     info3=None,
+                     min=-0.0,
+                     max=0.70,
+                     Q=10,
+                     name=None,
+                     localMax=True,
+                     scaleBar=10,
+                     butler=None):
     """Generate colored picture for cutout."""
     pipeVersion = dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
     if StrictVersion(pipeVersion) >= StrictVersion('3.9.0'):
@@ -131,10 +194,10 @@ def coaddColourImage(root, ra, dec, size, filt='gri',
     skyMap = butler.get("deepCoadd_skyMap", immediate=True)
 
     # [Ra, Dec] pair
-    raDec = afwCoord.Coord(ra*afwGeom.degrees, dec*afwGeom.degrees)
+    raDec = afwCoord.Coord(ra * afwGeom.degrees, dec * afwGeom.degrees)
     # Expected size and center position
     dimExpect = (2 * size + 1)
-    cenExpect = (dimExpect/2.0, dimExpect/2.0)
+    cenExpect = (dimExpect / 2.0, dimExpect / 2.0)
     # Create a empty array
     # For RGB image, the data type should be uint8
     rgbEmpty = np.zeros((dimExpect, dimExpect, 3), dtype="uint8")
@@ -145,7 +208,6 @@ def coaddColourImage(root, ra, dec, size, filt='gri',
     elif not (isHscFilter(filt[0]) & isHscFilter(filt[1]) &
               isHscFilter(filt[2])):
         raise Exception("Not all filters are valid !")
-
     """
     Figure out the area we want, and read the data.
     For coadds the WCS is the same in all bands, but the code handles
@@ -186,8 +248,8 @@ def coaddColourImage(root, ra, dec, size, filt='gri',
 
         for i in range(3):
             # Find the file of the coadd image
-            coadd = butler.get(coaddData, tract=tract, patch=patch,
-                               filter=filtArr[i])
+            coadd = butler.get(
+                coaddData, tract=tract, patch=patch, filter=filtArr[i])
             # Get the WCS information
             wcs = coadd.getWcs()
             # Convert the central coordinate from Ra,Dec to pixel unit
@@ -220,12 +282,11 @@ def coaddColourImage(root, ra, dec, size, filt='gri',
             maxArr = []
             for m in range(3):
                 imgPad = np.zeros((dimExpect, dimExpect), dtype=float)
-                imgPad[newY[m]:(newY[m] + images[m].getHeight()),
-                       newX[m]:(newX[m] +
-                                images[m].getWidth())] = images[m].getArray()
+                imgPad[newY[m]:(newY[m] + images[m].getHeight()), newX[m]:(
+                    newX[m] + images[m].getWidth())] = images[m].getArray()
                 globalMax = np.max(images[m].getArray())
-                localMax = np.max(imgPad[cenExpect[0]-10:cenExpect[0]+10,
-                                  cenExpect[1]-10:cenExpect[1]+10])
+                localMax = np.max(imgPad[cenExpect[0] - 10:cenExpect[0] + 10,
+                                         cenExpect[1] - 10:cenExpect[1] + 10])
                 maxArr.append(localMax / globalMax)
                 # print "### %d : %6.3f" % (m+1, localMax/globalMax)
             maxShow = np.max(np.asarray(maxArr))
@@ -243,14 +304,18 @@ def coaddColourImage(root, ra, dec, size, filt='gri',
             partial = False
         # Generate the RGB image
         # 15/04/22: min ==> minimum
-        imgRgb = afwRgb.makeRGB(rCut, gCut, bCut, minimum=min,
-                                range=(maxShow - min), Q=Q,
-                                saturatedPixelValue=None)
+        imgRgb = afwRgb.makeRGB(
+            rCut,
+            gCut,
+            bCut,
+            minimum=min,
+            range=(maxShow - min),
+            Q=Q,
+            saturatedPixelValue=None)
         if partial:
             for k in range(3):
-                rgbEmpty[newY[k]:(newY[k] + images[k].getHeight()),
-                         newX[k]:(newX[k] + images[k].getWidth()),
-                         k] = imgRgb[:, :, k]
+                rgbEmpty[newY[k]:(newY[k] + images[k].getHeight()), newX[k]:(
+                    newX[k] + images[k].getWidth()), k] = imgRgb[:, :, k]
             imgRgb = rgbEmpty
         # Add a scale bar
         if scaleBar is not None:
@@ -261,13 +326,28 @@ def coaddColourImage(root, ra, dec, size, filt='gri',
             sString = None
         # Better way to show the image
         if partial:
-            saveRgbPng(outRgb, imgRgb, cenMark=True, xCen=cenExpect[0],
-                       yCen=cenExpect[1], sLength=sLength, sString=sString,
-                       name=name, info1=info1, info2=info2, info3=info3)
+            saveRgbPng(
+                outRgb,
+                imgRgb,
+                cenMark=True,
+                xCen=cenExpect[0],
+                yCen=cenExpect[1],
+                sLength=sLength,
+                sString=sString,
+                name=name,
+                info1=info1,
+                info2=info2,
+                info3=info3)
         else:
-            saveRgbPng(outRgb, imgRgb,  name=name,
-                       info1=info1, info2=info2, info3=info3,
-                       sLength=sLength, sString=sString)
+            saveRgbPng(
+                outRgb,
+                imgRgb,
+                name=name,
+                info1=info1,
+                info2=info2,
+                info3=info3,
+                sLength=sLength,
+                sString=sString)
 
 
 def getTractPatchList(matches):
@@ -289,17 +369,29 @@ def getFitsImgName(root, tract, patch, filter, imgType='deepCoadd_calexp'):
     """Get the fits name."""
     if root[-1] is not '/':
         root += '/'
-    imgName = (root + imgType + '/' + filter + '/' + str(tract) +
-               '/' + patch + '.fits')
+    imgName = (root + imgType + '/' + filter + '/' + str(tract) + '/' + patch +
+               '.fits')
 
     return imgName
 
 
-def coaddColourImageFull(root, ra, dec, size, filt='gri',
+def coaddColourImageFull(root,
+                         ra,
+                         dec,
+                         size,
+                         filt='gri',
                          prefix='hsc_coadd_cutout',
-                         info1=None, info2=None, info3=None,
-                         min=-0.0, max=0.70, Q=10, name=None, localMax=True,
-                         scaleBar=10, butler=None, verbose=False):
+                         info1=None,
+                         info2=None,
+                         info3=None,
+                         min=-0.0,
+                         max=0.70,
+                         Q=10,
+                         name=None,
+                         localMax=True,
+                         scaleBar=10,
+                         butler=None,
+                         verbose=False):
     """General full colored picture of cutout."""
     pipeVersion = dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
     if StrictVersion(pipeVersion) >= StrictVersion('3.9.0'):
@@ -320,7 +412,7 @@ def coaddColourImageFull(root, ra, dec, size, filt='gri',
     skyMap = butler.get("deepCoadd_skyMap", immediate=True)
 
     # [Ra, Dec] list
-    raDec = afwCoord.Coord(ra*afwGeom.degrees, dec*afwGeom.degrees)
+    raDec = afwCoord.Coord(ra * afwGeom.degrees, dec * afwGeom.degrees)
     raList, decList = getCircleRaDec(ra, dec, size)
     points = map(lambda x, y: afwGeom.Point2D(x, y), raList, decList)
     raDecList = map(lambda x: afwCoord.IcrsCoord(x), points)
@@ -380,8 +472,12 @@ def coaddColourImageFull(root, ra, dec, size, filt='gri',
         for i in range(3):
             try:
                 # Find the coadd image
-                coadd = butler.get(coaddData, tract=tract, patch=patch,
-                                   filter=filtArr[i], immediate=True)
+                coadd = butler.get(
+                    coaddData,
+                    tract=tract,
+                    patch=patch,
+                    filter=filtArr[i],
+                    immediate=True)
                 # Get the WCS information
                 wcs = coadd.getWcs()
                 # Convert the central coordinate from Ra,Dec to pixel unit
@@ -395,8 +491,7 @@ def coaddColourImageFull(root, ra, dec, size, filt='gri',
                 # Compare to the coadd image, and clip
                 bbox.clip(coadd.getBBox(afwImage.PARENT))
 
-                subImage = afwImage.ExposureF(coadd, bbox,
-                                              afwImage.PARENT)
+                subImage = afwImage.ExposureF(coadd, bbox, afwImage.PARENT)
                 # Extract the image array
                 images[i] = subImage.getMaskedImage().getImage()
                 # Get the size and begginng coordinates of the BBox
@@ -410,8 +505,8 @@ def coaddColourImageFull(root, ra, dec, size, filt='gri',
                                                              filtArr[i])
                 images[i] = None
 
-        if not ((images[0] is None) and (images[1] is None) and (
-                images[2] is None)):
+        if not ((images[0] is None) and (images[1] is None) and
+                (images[2] is None)):
             # Image from at least one band is available
             # So bWidth, bHeight, bXbegin, bYbegin should be defined
             boxX.append(bWidth)
@@ -436,116 +531,20 @@ def coaddColourImageFull(root, ra, dec, size, filt='gri',
                     # Replace the unavailable data with zero array XXX
                     rCut = np.zeros([bHeight, bWidth])
             # Generate the RGB image
-            # 15/04/22: min ==> minimum
-            imgRgb = afwRgb.makeRGB(rCut, gCut, bCut, minimum=min,
-                                    range=(max - min), Q=Q,
-                                    saturatedPixelValue=None)
+            imgRgb = afwRgb.makeRGB(
+                rCut,
+                gCut,
+                bCut,
+                minimum=min,
+                range=(max - min),
+                Q=Q,
+                saturatedPixelValue=None)
             rgbArr.append(imgRgb)
         else:
             # Bypass the bad data
             print WAR
             print "### NO DATA IS AVAILABLE IN %d - %s" % (tract, patch)
             print WAR
-        """
-        try:
-            # Get the metadata
-            md1 = butler.get("deepCoadd_md", immediate=True,
-                            tract=tract, patch=patch, filter=filter1)
-            md2 = butler.get("deepCoadd_md", immediate=True,
-                            tract=tract, patch=patch, filter=filter2)
-            md3 = butler.get("deepCoadd_md", immediate=True,
-                            tract=tract, patch=patch, filter=filter3)
-        except Exception, errMsg:
-            print "#########################################################"
-            print " The galaxy is not available in %d - %s" % (tract, patch)
-            print "#########################################################"
-            print errMsg
-        else:
-            #Then we can read the desired pixels
-            images  = {}
-            # Go through the three bands
-            for i in range(3):
-                # Find the file of the coadd image
-                coadd = butler.get(coaddData, tract=tract, patch=patch,
-                                    filter=filtArr[i], immediate=True)
-                # Get the WCS information
-                wcs = coadd.getWcs()
-                # Convert the central coordinate from Ra,Dec to pixel unit
-                pixel = wcs.skyToPixel(raDec)
-                pixel = afwGeom.Point2I(pixel)
-                # Define the bounding box for the central pixel
-                bbox = afwGeom.Box2I(pixel, pixel)
-                # Grow the bounding box to the desired size
-                bbox.grow(int(cutoutSize))
-                xOri, yOri = bbox.getBegin()
-                # Compare to the coadd image, and clip
-                bbox.clip(coadd.getBBox(afwImage.PARENT))
-                # Get the masked image
-                try:
-                    subImage  = afwImage.ExposureF(coadd, bbox,
-                                                   afwImage.PARENT)
-                    # Extract the image array
-                    images[i] = subImage.getMaskedImage().getImage()
-                    bboxGood = True
-                    if i == 1:
-                        boxX.append(bbox.getWidth())
-                        boxY.append(bbox.getHeight())
-                        boxSize.append(bbox.getWidth() * bbox.getHeight())
-                        newX.append(bbox.getBeginX() - xOri)
-                        newY.append(bbox.getBeginY() - yOri)
-                except:
-                    print '### SOMETHING IS WRONG WITH THIS BOUNDING BOX !!'
-                    print "    %d -- %s -- %s " % (tract, patch, filtArr[i])
-                    print "    Bounding Box Size: %d" % (bbox.getWidth() *
-                                                         bbox.getHeight())
-                    bboxGood  = False
-                    continue
-
-            if bboxGood:
-                # Define the Blue, Green, and Red channels
-                # These cutouts are still HSC ImageF object, not numpy array
-                bCut, gCut, rCut = images[0], images[1], images[2]
-                # Generate the RGB image
-                # 15/04/22: min ==> minimum
-                imgRgb = afwRgb.makeRGB(rCut, gCut, bCut, minimum=min,
-                                       range=(max - min), Q=Q,
-                                       saturatedPixelValue=None)
-                rgbArr.append(imgRgb)
-            else:
-                continue
-            """
-    # Number of returned RGB image
-    nReturn = len(rgbArr)
-    if verbose:
-        print "### Return %d Useful Images" % nReturn
-    if nReturn > 0:
-        # XXX Test, should be removed later
-        if len(rgbArr) != len(boxSize):
-            raise Exception("### Something is weird here !")
-        indSize = np.argsort(boxSize)
-        # Go through the returned images, put them in the cutout region
-        for n in range(nReturn):
-            ind = indSize[n]
-            # This could lead to problem FIXME
-            rgbUse = rgbArr[ind]
-            for k in range(3):
-                rgbEmpty[newY[ind]:(newY[ind] + boxY[ind]),
-                         newX[ind]:(newX[ind] + boxX[ind]),
-                         k] = rgbUse[:, :, k]
-
-        imgRgb = rgbEmpty
-        # Add a scale bar
-        if scaleBar is not None:
-            sLength = ((scaleBar * 1.0) / 0.168) / (dimExpect * 1.0)
-            sString = "%d\"" % int(scaleBar)
-        else:
-            sLength = None
-            sString = None
-
-        # Better way to show the image
-        saveRgbPng(outRgb, imgRgb, name=name,
-                   info1=info1, info2=info2, info3=info3,
-                   sLength=sLength, sString=sString)
     else:
         print WAR
         print "### NO COLOR IMAGE IS GENERATED FOR THIS OBJECT !!"
@@ -556,20 +555,35 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("root", help="Root directory of data repository")
-    parser.add_argument("ra",   type=float, help="RA  to search")
-    parser.add_argument("dec",  type=float, help="Dec to search")
+    parser.add_argument("ra", type=float, help="RA  to search")
+    parser.add_argument("dec", type=float, help="Dec to search")
     parser.add_argument("size", type=float, help="Half size of the cutout box")
-    parser.add_argument('-f', '--filters', dest='filt',
-                        help="Combination of 3 filters for the colour image",
-                        default='gri')
-    parser.add_argument('-p', '--prefix', dest='outfile',
-                        help='Prefix of the output file',
-                        default='hsc_coadd_cutout')
-    parser.add_argument('-i', '--info', dest='info',
-                        help='Information to show on the image',
-                        default=None)
+    parser.add_argument(
+        '-f',
+        '--filters',
+        dest='filt',
+        help="Combination of 3 filters for the colour image",
+        default='gri')
+    parser.add_argument(
+        '-p',
+        '--prefix',
+        dest='outfile',
+        help='Prefix of the output file',
+        default='hsc_coadd_cutout')
+    parser.add_argument(
+        '-i',
+        '--info',
+        dest='info',
+        help='Information to show on the image',
+        default=None)
     args = parser.parse_args()
 
-    coaddColourImageFull(args.root, args.ra, args.dec, args.size,
-                         filt=args.filt, prefix=args.outfile,
-                         info1=args.info, verbose=True)
+    coaddColourImageFull(
+        args.root,
+        args.ra,
+        args.dec,
+        args.size,
+        filt=args.filt,
+        prefix=args.outfile,
+        info1=args.info,
+        verbose=True)

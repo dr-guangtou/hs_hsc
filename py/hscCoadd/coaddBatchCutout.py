@@ -68,10 +68,17 @@ def decideCutoutSize(z, safe=False):
         return 300
 
 
-def parseInputCatalog(input, sizeDefault=300, idField='index',
-                      raField='ra', decField='dec', sizeField='size',
-                      zField=None, zCutoutSize=False, infoField1=None,
-                      infoField2=None, safe=False):
+def parseInputCatalog(input,
+                      sizeDefault=300,
+                      idField='index',
+                      raField='ra',
+                      decField='dec',
+                      sizeField='size',
+                      zField=None,
+                      zCutoutSize=False,
+                      infoField1=None,
+                      infoField2=None,
+                      safe=False):
     """
     Parse the input catalog.
 
@@ -150,14 +157,29 @@ def parseInputCatalog(input, sizeDefault=300, idField='index',
     return (index, ra, dec, size, redshift, info2, info3), nObjs
 
 
-def coaddBatchCutout(root, inCat, size=100, band='HSC-I',
-                     prefix='coadd_cutout', sample=None, idField='index',
-                     raField='ra', decField='dec', colorFilters='gri',
-                     sizeField='size', zCutoutSize=False,
-                     zField=None, verbose=True, noColor=False,
-                     onlyColor=False, infoField1=None, infoField2=None,
-                     clean=False, img_min=-0.0, img_max=0.72,
-                     Q=15, stitch=False,
+def coaddBatchCutout(root,
+                     inCat,
+                     size=100,
+                     band='HSC-I',
+                     prefix='coadd_cutout',
+                     sample=None,
+                     idField='index',
+                     raField='ra',
+                     decField='dec',
+                     colorFilters='gri',
+                     sizeField='size',
+                     zCutoutSize=False,
+                     zField=None,
+                     verbose=True,
+                     noColor=False,
+                     onlyColor=False,
+                     infoField1=None,
+                     infoField2=None,
+                     clean=False,
+                     img_min=-0.0,
+                     img_max=0.72,
+                     Q=15,
+                     stitch=False,
                      noName=False):
     """
     Generate HSC coadd cutout images in batch mode.
@@ -169,11 +191,16 @@ def coaddBatchCutout(root, inCat, size=100, band='HSC-I',
         raise Exception("Wrong root directory for data! %s" % root)
 
     if os.path.exists(inCat):
-        result = parseInputCatalog(inCat, sizeDefault=size, idField=idField,
-                                   raField=raField, decField=decField,
-                                   zField=zField, zCutoutSize=zCutoutSize,
-                                   infoField1=infoField1,
-                                   infoField2=infoField2)
+        result = parseInputCatalog(
+            inCat,
+            sizeDefault=size,
+            idField=idField,
+            raField=raField,
+            decField=decField,
+            zField=zField,
+            zCutoutSize=zCutoutSize,
+            infoField1=infoField1,
+            infoField2=infoField2)
         index, ra, dec, size, z, extr1, extr2 = result
     else:
         raise Exception("### Can not find the input catalog: %s" % inCat)
@@ -204,9 +231,14 @@ def coaddBatchCutout(root, inCat, size=100, band='HSC-I',
 
         # Cutout Image
         if not onlyColor:
-            tempOut = coaddImageCutout(root, ra[i], dec[i], size[i],
-                                       saveMsk=True, filt=band,
-                                       prefix=newPrefix)
+            tempOut = coaddImageCutout(
+                root,
+                ra[i],
+                dec[i],
+                size[i],
+                saveMsk=True,
+                filt=band,
+                prefix=newPrefix)
             coaddFound, noData, partialCut = tempOut
             if coaddFound:
                 if not noData:
@@ -222,8 +254,7 @@ def coaddBatchCutout(root, inCat, size=100, band='HSC-I',
             with open(logFile, "a") as logMatch:
                 try:
                     logFormat = "%5d    %s    %s \n"
-                    logMatch.write(logFormat % (index[i], band,
-                                                matchStatus))
+                    logMatch.write(logFormat % (index[i], band, matchStatus))
                     fcntl.flock(logMatch, fcntl.LOCK_UN)
                 except IOError:
                     pass
@@ -251,48 +282,87 @@ def coaddBatchCutout(root, inCat, size=100, band='HSC-I',
                 name = str(index[i])
             if stitch:
                 if not clean:
-                    coaddColourImageFull(root, ra[i], dec[i], size[i],
-                                         filt=colorFilters,
-                                         scaleBar=10,
-                                         prefix=newPrefix, name=name,
-                                         info1=info1, info2=info2,
-                                         info3=info3,
-                                         img_min=img_min, img_max=img_max,
-                                         Q=Q)
+                    coaddColourImageFull(
+                        root,
+                        ra[i],
+                        dec[i],
+                        size[i],
+                        filt=colorFilters,
+                        scaleBar=10,
+                        prefix=newPrefix,
+                        name=name,
+                        info1=info1,
+                        info2=info2,
+                        info3=info3,
+                        img_min=img_min,
+                        img_max=img_max,
+                        Q=Q)
                 else:
-                    coaddColourImageFull(root, ra[i], dec[i], size[i],
-                                         filt=colorFilters,
-                                         scaleBar=None,
-                                         prefix=newPrefix, name=None,
-                                         info1=None, info2=None,
-                                         info3=None,
-                                         img_min=img_min, img_max=img_max,
-                                         Q=Q)
+                    coaddColourImageFull(
+                        root,
+                        ra[i],
+                        dec[i],
+                        size[i],
+                        filt=colorFilters,
+                        scaleBar=None,
+                        prefix=newPrefix,
+                        name=None,
+                        info1=None,
+                        info2=None,
+                        info3=None,
+                        img_min=img_min,
+                        img_max=img_max,
+                        Q=Q)
             else:
-                coaddColourImage(root, ra[i], dec[i], size[i],
-                                 filt=colorFilters,
-                                 prefix=newPrefix, name=name,
-                                 info1=info1, info2=info2, info3=info3,
-                                 img_min=img_min, img_max=img_max, Q=Q)
+                coaddColourImage(
+                    root,
+                    ra[i],
+                    dec[i],
+                    size[i],
+                    filt=colorFilters,
+                    prefix=newPrefix,
+                    name=name,
+                    info1=info1,
+                    info2=info2,
+                    info3=info3,
+                    img_min=img_min,
+                    img_max=img_max,
+                    Q=Q)
         elif (matchStatus is 'Full') or (matchStatus is 'Part'):
             if noName:
                 name = None
             else:
                 name = str(index[i])
             if stitch:
-                coaddColourImageFull(root, ra[i], dec[i], size[i],
-                                     filt=colorFilters,
-                                     prefix=newPrefix, name=name,
-                                     info1=info1, info2=info2,
-                                     info3=info3,
-                                     img_min=img_min, img_max=img_max,
-                                     Q=Q)
+                coaddColourImageFull(
+                    root,
+                    ra[i],
+                    dec[i],
+                    size[i],
+                    filt=colorFilters,
+                    prefix=newPrefix,
+                    name=name,
+                    info1=info1,
+                    info2=info2,
+                    info3=info3,
+                    img_min=img_min,
+                    img_max=img_max,
+                    Q=Q)
             else:
-                coaddColourImage(root, ra[i], dec[i], size[i],
-                                 filt=colorFilters,
-                                 prefix=newPrefix, name=name,
-                                 info1=info1, info2=info2, info3=info3,
-                                 img_min=img_min, img_max=img_max, Q=Q)
+                coaddColourImage(
+                    root,
+                    ra[i],
+                    dec[i],
+                    size[i],
+                    filt=colorFilters,
+                    prefix=newPrefix,
+                    name=name,
+                    info1=info1,
+                    info2=info2,
+                    info3=info3,
+                    img_min=img_min,
+                    img_max=img_max,
+                    Q=Q)
 
 
 def singleCut(obj, butler, root, useful, config):
@@ -354,30 +424,32 @@ def singleCut(obj, butler, root, useful, config):
                 filterPre = newPrefix
 
             if saveSrc:
-                tempOut = coaddImageCutFull(root,
-                                            ra[obj],
-                                            dec[obj],
-                                            size[obj],
-                                            savePsf=True,
-                                            saveSrc=True,
-                                            visual=True,
-                                            filt=filterUse,
-                                            prefix=filterPre,
-                                            butler=butler,
-                                            imgOnly=imgOnly)
+                tempOut = coaddImageCutFull(
+                    root,
+                    ra[obj],
+                    dec[obj],
+                    size[obj],
+                    savePsf=True,
+                    saveSrc=True,
+                    visual=True,
+                    filt=filterUse,
+                    prefix=filterPre,
+                    butler=butler,
+                    imgOnly=imgOnly)
                 found, full, npatch = tempOut
             else:
-                tempOut = coaddImageCutFull(root,
-                                            ra[obj],
-                                            dec[obj],
-                                            size[obj],
-                                            savePsf=True,
-                                            saveSrc=False,
-                                            visual=True,
-                                            filt=filterUse,
-                                            prefix=filterPre,
-                                            butler=butler,
-                                            imgOnly=imgOnly)
+                tempOut = coaddImageCutFull(
+                    root,
+                    ra[obj],
+                    dec[obj],
+                    size[obj],
+                    savePsf=True,
+                    saveSrc=False,
+                    visual=True,
+                    filt=filterUse,
+                    prefix=filterPre,
+                    butler=butler,
+                    imgOnly=imgOnly)
                 found, full, npatch = tempOut
             if found:
                 matchStatus = 'Found'
@@ -392,10 +464,8 @@ def singleCut(obj, butler, root, useful, config):
             with open(logFile, "a") as logMatch:
                 logStr = "%10s   %s   %6s   %4s   %3d \n"
                 try:
-                    logMatch.write(logStr % (str(index[obj]),
-                                             filterUse,
-                                             matchStatus,
-                                             full, npatch))
+                    logMatch.write(logStr % (str(index[obj]), filterUse,
+                                             matchStatus, full, npatch))
                     fcntl.flock(logMatch, fcntl.LOCK_UN)
                 except IOError:
                     pass
@@ -422,30 +492,32 @@ def singleCut(obj, butler, root, useful, config):
                     filterPre = newPrefix
 
                 if saveSrc:
-                    tempOut = coaddImageCutFull(root,
-                                                ra[obj],
-                                                dec[obj],
-                                                size[obj],
-                                                savePsf=True,
-                                                saveSrc=True,
-                                                visual=True,
-                                                filt=filterUse,
-                                                prefix=filterPre,
-                                                butler=butler,
-                                                imgOnly=imgOnly)
+                    tempOut = coaddImageCutFull(
+                        root,
+                        ra[obj],
+                        dec[obj],
+                        size[obj],
+                        savePsf=True,
+                        saveSrc=True,
+                        visual=True,
+                        filt=filterUse,
+                        prefix=filterPre,
+                        butler=butler,
+                        imgOnly=imgOnly)
                     found, full, npatch = tempOut
                 else:
-                    tempOut = coaddImageCutFull(root,
-                                                ra[obj],
-                                                dec[obj],
-                                                size[obj],
-                                                savePsf=True,
-                                                saveSrc=False,
-                                                visual=True,
-                                                filt=filterUse,
-                                                prefix=filterPre,
-                                                butler=butler,
-                                                imgOnly=imgOnly)
+                    tempOut = coaddImageCutFull(
+                        root,
+                        ra[obj],
+                        dec[obj],
+                        size[obj],
+                        savePsf=True,
+                        saveSrc=False,
+                        visual=True,
+                        filt=filterUse,
+                        prefix=filterPre,
+                        butler=butler,
+                        imgOnly=imgOnly)
                     found, full, npatch = tempOut
                 if found:
                     matchStatus = 'Found'
@@ -460,10 +532,8 @@ def singleCut(obj, butler, root, useful, config):
                 with open(logFilter, "a") as logMatch:
                     logStr = "%5d   %s   %6s   %4s   %3d \n"
                     try:
-                        logMatch.write(logStr % (index[obj],
-                                                 filterUse,
-                                                 matchStatus,
-                                                 full, npatch))
+                        logMatch.write(logStr % (index[obj], filterUse,
+                                                 matchStatus, full, npatch))
                         fcntl.flock(logMatch, fcntl.LOCK_UN)
                     except IOError:
                         pass
@@ -492,27 +562,39 @@ def singleCut(obj, butler, root, useful, config):
         if verbose:
             print "### Generate Color Image !"
         if clean:
-            coaddColourImageFull(root,
-                                 ra[obj], dec[obj],
-                                 size[obj],
-                                 filt=colorFilters,
-                                 prefix=newPrefix, name=None,
-                                 info1=None, info2=None,
-                                 info3=None,
-                                 scaleBar=None,
-                                 img_min=img_min, img_max=img_max, Q=Q,
-                                 butler=butler)
+            coaddColourImageFull(
+                root,
+                ra[obj],
+                dec[obj],
+                size[obj],
+                filt=colorFilters,
+                prefix=newPrefix,
+                name=None,
+                info1=None,
+                info2=None,
+                info3=None,
+                scaleBar=None,
+                img_min=img_min,
+                img_max=img_max,
+                Q=Q,
+                butler=butler)
         else:
-            coaddColourImageFull(root,
-                                 ra[obj], dec[obj],
-                                 size[obj],
-                                 filt=colorFilters,
-                                 prefix=newPrefix, name=name,
-                                 info1=info1, info2=info2,
-                                 info3=info3,
-                                 scaleBar=scaleBar,
-                                 img_min=img_min, img_max=img_max, Q=Q,
-                                 butler=butler)
+            coaddColourImageFull(
+                root,
+                ra[obj],
+                dec[obj],
+                size[obj],
+                filt=colorFilters,
+                prefix=newPrefix,
+                name=name,
+                info1=info1,
+                info2=info2,
+                info3=info3,
+                scaleBar=scaleBar,
+                img_min=img_min,
+                img_max=img_max,
+                Q=Q,
+                butler=butler)
     elif (matchStatus is 'Found' and not noColor):
         if noName:
             name = None
@@ -520,24 +602,53 @@ def singleCut(obj, butler, root, useful, config):
             name = str(index[obj])
         if verbose:
             print "### Generate Color Image !"
-        coaddColourImageFull(root, ra[obj],
-                             dec[obj], size[obj],
-                             filt=colorFilters,
-                             prefix=newPrefix, name=name,
-                             info1=info1, info2=info2, info3=info3,
-                             img_min=img_min, img_max=img_max,
-                             Q=Q, butler=butler)
+        coaddColourImageFull(
+            root,
+            ra[obj],
+            dec[obj],
+            size[obj],
+            filt=colorFilters,
+            prefix=newPrefix,
+            name=name,
+            info1=info1,
+            info2=info2,
+            info3=info3,
+            img_min=img_min,
+            img_max=img_max,
+            Q=Q,
+            butler=butler)
 
 
-def coaddBatchCutFull(root, inCat, size=100, band='HSC-I',
-                      prefix='coadd_cutout', sample=None, idField='index',
-                      raField='ra', decField='dec', colorFilters='gri',
-                      sizeField='size', zCutoutSize=False, zField=None,
-                      verbose=True, noColor=False, onlyColor=False,
-                      infoField1=None, infoField2=None, clean=False,
-                      img_min=-0.0, img_max=0.72, Q=15, safe=False, saveSrc=False,
-                      makeDir=False, noName=False, njobs=1,
-                      imgOnly=False, allFilters=False, scaleBar=10.0):
+def coaddBatchCutFull(root,
+                      inCat,
+                      size=100,
+                      band='HSC-I',
+                      prefix='coadd_cutout',
+                      sample=None,
+                      idField='index',
+                      raField='ra',
+                      decField='dec',
+                      colorFilters='gri',
+                      sizeField='size',
+                      zCutoutSize=False,
+                      zField=None,
+                      verbose=True,
+                      noColor=False,
+                      onlyColor=False,
+                      infoField1=None,
+                      infoField2=None,
+                      clean=False,
+                      img_min=-0.0,
+                      img_max=0.72,
+                      Q=15,
+                      safe=False,
+                      saveSrc=False,
+                      makeDir=False,
+                      noName=False,
+                      njobs=1,
+                      imgOnly=False,
+                      allFilters=False,
+                      scaleBar=10.0):
     """
     Generate HSC coadd cutout images.
 
@@ -559,16 +670,18 @@ def coaddBatchCutFull(root, inCat, size=100, band='HSC-I',
             print COM
             print "              PARSE THE INPUT CATALOG                 "
             print COM
-        useful, nObjs = parseInputCatalog(inCat, sizeDefault=size,
-                                          idField=idField,
-                                          raField=raField,
-                                          decField=decField,
-                                          zField=zField,
-                                          sizeField=sizeField,
-                                          zCutoutSize=zCutoutSize,
-                                          infoField1=infoField1,
-                                          infoField2=infoField2,
-                                          safe=safe)
+        useful, nObjs = parseInputCatalog(
+            inCat,
+            sizeDefault=size,
+            idField=idField,
+            raField=raField,
+            decField=decField,
+            zField=zField,
+            sizeField=sizeField,
+            zCutoutSize=zCutoutSize,
+            infoField1=infoField1,
+            infoField2=infoField2,
+            safe=safe)
     else:
         raise Exception("### Can not find the input catalog: %s" % inCat)
 
@@ -578,34 +691,35 @@ def coaddBatchCutFull(root, inCat, size=100, band='HSC-I',
         print SEP
     indexObj = numpy.asarray(range(nObjs))
 
-    config = {'band': band,
-              'prefix': prefix,
-              'sample': sample,
-              'colorFilters': colorFilters,
-              'zField': zField,
-              'sizeField': sizeField,
-              'verbose': verbose,
-              'noColor': noColor,
-              'onlyColor': onlyColor,
-              'infoField1': infoField1,
-              'infoField2': infoField2,
-              'clean': clean,
-              'img_min': img_min,
-              'img_max': img_max,
-              'Q': Q,
-              'saveSrc': saveSrc,
-              'makeDir': makeDir,
-              'noName': noName,
-              'imgOnly': imgOnly,
-              'allFilters': allFilters,
-              'scaleBar': scaleBar
-              }
+    config = {
+        'band': band,
+        'prefix': prefix,
+        'sample': sample,
+        'colorFilters': colorFilters,
+        'zField': zField,
+        'sizeField': sizeField,
+        'verbose': verbose,
+        'noColor': noColor,
+        'onlyColor': onlyColor,
+        'infoField1': infoField1,
+        'infoField2': infoField2,
+        'clean': clean,
+        'img_min': img_min,
+        'img_max': img_max,
+        'Q': Q,
+        'saveSrc': saveSrc,
+        'makeDir': makeDir,
+        'noName': noName,
+        'imgOnly': imgOnly,
+        'allFilters': allFilters,
+        'scaleBar': scaleBar
+    }
 
     if njobs > 1 and multiJob:
         """Start parallel run."""
-        Parallel(n_jobs=njobs)(delayed(singleCut)(
-                               index, butler, root, useful,
-                               config) for index in indexObj)
+        Parallel(n_jobs=njobs)(delayed(singleCut)(index, butler, root,
+                                                  useful, config)
+                               for index in indexObj)
     else:
         for index in indexObj:
             singleCut(index, butler, root, useful, config)
@@ -616,78 +730,154 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("root", help="Root directory of data repository")
     parser.add_argument("incat", help="The input catalog for cutout")
-    parser.add_argument("-s", '--size', dest='size', type=int,
-                        help="Half size of the cutout box", default=200)
-    parser.add_argument('-f', '--filter', dest='filt', help="Filter",
-                        default='HSC-I')
-    parser.add_argument('--sample', dest='sample', help="Sample name",
-                        default=None)
-    parser.add_argument('-j', '--njobs', type=int,
-                        help='Number of jobs run at the same time',
-                        dest='njobs', default=1)
-    parser.add_argument('-p', '--prefix', dest='prefix',
-                        help='Prefix of the output file',
-                        default='hsc_coadd_cutout')
-    parser.add_argument('-id', '--id', dest='idField',
-                        help="Column name for ID", default='index')
-    parser.add_argument('-ra', '--ra', dest='raField',
-                        help="Column name for RA",
-                        default='ra_hsc')
-    parser.add_argument('-dec', '--dec', dest='decField',
-                        help="Column name for DEC",
-                        default='dec_hsc')
-    parser.add_argument('-z', '--redshift', dest='zField',
-                        help="Column name for z",
-                        default='z_use')
-    parser.add_argument('-cf', '--color-filters', dest='colorFilters',
-                        help="Choice of filters for color images",
-                        default='riz')
-    parser.add_argument('-sf', '--size-field', dest='sizeField',
-                        help="Column name for cutout size",
-                        default=None)
-    parser.add_argument('-info1', '--infoField1', dest='infoField1',
-                        help="Column name for first extra information",
-                        default=None)
-    parser.add_argument('-info2', '--infoField2', dest='infoField2',
-                        help="Column name for second extra information",
-                        default=None)
-    parser.add_argument('-af', '--allFilters', action="store_true",
-                        dest='allFilters', default=False)
-    parser.add_argument('-img', '--imgOnly', action="store_true",
-                        dest='imgOnly', default=False)
-    parser.add_argument('-zc', '--zCutoutSize', action="store_true",
-                        dest='zCutoutSize', default=True)
-    parser.add_argument('-nc', '--noColor', action="store_true",
-                        dest='noColor', default=True)
-    parser.add_argument('-oc', '--onlyColor', action="store_true",
-                        dest='onlyColor', default=False)
-    parser.add_argument('-safe', '--safe', action="store_true", dest='safe',
-                        default=False)
-    parser.add_argument('-clean', '--clean', action="store_true", dest='clean',
-                        default=False)
-    parser.add_argument('-nn', '--noName', action="store_true",
-                        dest='noName', default=False)
-    parser.add_argument('-v', '--verbose', action="store_true", dest='verbose',
-                        default=False)
-    parser.add_argument('-src', '--src', action="store_true", dest='saveSrc',
-                        default=False)
-    parser.add_argument('-makeDir', '--makeDir', action="store_true",
-                        dest='makeDir', default=False)
-    parser.add_argument('-b', '--scalebar', type=float,
-                        help='Size of the scale bar in unit of arcsec',
-                        dest='scaleBar', default=10.0)
+    parser.add_argument(
+        "-s",
+        '--size',
+        dest='size',
+        type=int,
+        help="Half size of the cutout box",
+        default=200)
+    parser.add_argument(
+        '-f', '--filter', dest='filt', help="Filter", default='HSC-I')
+    parser.add_argument(
+        '--sample', dest='sample', help="Sample name", default=None)
+    parser.add_argument(
+        '-j',
+        '--njobs',
+        type=int,
+        help='Number of jobs run at the same time',
+        dest='njobs',
+        default=1)
+    parser.add_argument(
+        '-p',
+        '--prefix',
+        dest='prefix',
+        help='Prefix of the output file',
+        default='hsc_coadd_cutout')
+    parser.add_argument(
+        '-id',
+        '--id',
+        dest='idField',
+        help="Column name for ID",
+        default='index')
+    parser.add_argument(
+        '-ra',
+        '--ra',
+        dest='raField',
+        help="Column name for RA",
+        default='ra_hsc')
+    parser.add_argument(
+        '-dec',
+        '--dec',
+        dest='decField',
+        help="Column name for DEC",
+        default='dec_hsc')
+    parser.add_argument(
+        '-z',
+        '--redshift',
+        dest='zField',
+        help="Column name for z",
+        default='z_use')
+    parser.add_argument(
+        '-cf',
+        '--color-filters',
+        dest='colorFilters',
+        help="Choice of filters for color images",
+        default='riz')
+    parser.add_argument(
+        '-sf',
+        '--size-field',
+        dest='sizeField',
+        help="Column name for cutout size",
+        default=None)
+    parser.add_argument(
+        '-info1',
+        '--infoField1',
+        dest='infoField1',
+        help="Column name for first extra information",
+        default=None)
+    parser.add_argument(
+        '-info2',
+        '--infoField2',
+        dest='infoField2',
+        help="Column name for second extra information",
+        default=None)
+    parser.add_argument(
+        '-af',
+        '--allFilters',
+        action="store_true",
+        dest='allFilters',
+        default=False)
+    parser.add_argument(
+        '-img',
+        '--imgOnly',
+        action="store_true",
+        dest='imgOnly',
+        default=False)
+    parser.add_argument(
+        '-zc',
+        '--zCutoutSize',
+        action="store_true",
+        dest='zCutoutSize',
+        default=True)
+    parser.add_argument(
+        '-nc', '--noColor', action="store_true", dest='noColor', default=True)
+    parser.add_argument(
+        '-oc',
+        '--onlyColor',
+        action="store_true",
+        dest='onlyColor',
+        default=False)
+    parser.add_argument(
+        '-safe', '--safe', action="store_true", dest='safe', default=False)
+    parser.add_argument(
+        '-clean', '--clean', action="store_true", dest='clean', default=False)
+    parser.add_argument(
+        '-nn', '--noName', action="store_true", dest='noName', default=False)
+    parser.add_argument(
+        '-v', '--verbose', action="store_true", dest='verbose', default=False)
+    parser.add_argument(
+        '-src', '--src', action="store_true", dest='saveSrc', default=False)
+    parser.add_argument(
+        '-makeDir',
+        '--makeDir',
+        action="store_true",
+        dest='makeDir',
+        default=False)
+    parser.add_argument(
+        '-b',
+        '--scalebar',
+        type=float,
+        help='Size of the scale bar in unit of arcsec',
+        dest='scaleBar',
+        default=10.0)
     args = parser.parse_args()
 
-    coaddBatchCutFull(args.root, args.incat, size=args.size,
-                      band=args.filt, prefix=args.prefix,
-                      idField=args.idField, raField=args.raField,
-                      decField=args.decField, sizeField=args.sizeField,
-                      colorFilters=args.colorFilters, zField=args.zField,
-                      zCutoutSize=args.zCutoutSize, noColor=args.noColor,
-                      onlyColor=args.onlyColor, infoField1=args.infoField1,
-                      infoField2=args.infoField2, safe=args.safe,
-                      verbose=args.verbose, clean=args.clean,
-                      saveSrc=args.saveSrc, sample=args.sample,
-                      makeDir=args.makeDir, noName=args.noName,
-                      imgOnly=args.imgOnly, allFilters=args.allFilters,
-                      njobs=args.njobs, scaleBar=args.scaleBar)
+    coaddBatchCutFull(
+        args.root,
+        args.incat,
+        size=args.size,
+        band=args.filt,
+        prefix=args.prefix,
+        idField=args.idField,
+        raField=args.raField,
+        decField=args.decField,
+        sizeField=args.sizeField,
+        colorFilters=args.colorFilters,
+        zField=args.zField,
+        zCutoutSize=args.zCutoutSize,
+        noColor=args.noColor,
+        onlyColor=args.onlyColor,
+        infoField1=args.infoField1,
+        infoField2=args.infoField2,
+        safe=args.safe,
+        verbose=args.verbose,
+        clean=args.clean,
+        saveSrc=args.saveSrc,
+        sample=args.sample,
+        makeDir=args.makeDir,
+        noName=args.noName,
+        imgOnly=args.imgOnly,
+        allFilters=args.allFilters,
+        njobs=args.njobs,
+        scaleBar=args.scaleBar)

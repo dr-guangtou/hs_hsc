@@ -7,7 +7,6 @@ import copy
 import fcntl
 import argparse
 import warnings
-import numpy as np
 from distutils.version import StrictVersion
 
 # HSC Pipeline
@@ -16,23 +15,27 @@ import lsst.afw.coord as afwCoord
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
+
+import numpy as np
+
 # Astropy
 from astropy import wcs as apWcs
 from astropy.io import fits
 # Matplotlib
 import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
-# Default colormap
-viridis = plt.get_cmap('viridis')
-viridis.set_bad('k', 1.)
-viridis_r = plt.get_cmap('viridis_r')
-plt.ioff()
 import matplotlib.patches as mpatches
 
 # Personal
 import coaddColourImage as cdColor
 import hscUtils as hUtil
+
+# Default colormap
+mpl.use('Agg')
+viridis = plt.get_cmap('viridis')
+viridis.set_bad('k', 1.)
+viridis_r = plt.get_cmap('viridis_r')
+plt.ioff()
 
 COM = '#' * 100
 SEP = '-' * 100
@@ -62,94 +65,152 @@ def flatSrcArr(srcArr):
     return srcUse
 
 
-def previewCoaddImage(img, msk, var, det, sizeX=10, sizeY=10,
-                      prefix='hsc_cutout', outPNG=None,
-                      oriX=None, oriY=None,
-                      boxW=None, boxH=None):
+def previewCoaddImage(img,
+                      msk,
+                      var,
+                      det,
+                      sizeX=10,
+                      sizeY=10,
+                      prefix='hsc_cutout',
+                      outPNG=None,
+                      oriX=None,
+                      oriY=None,
+                      boxW=None,
+                      boxH=None):
     """
     Generate a preview figure.
 
     Parameters:
     """
-    fig, axes = plt.subplots(sharex=True, sharey=True,
-                             figsize=(sizeX, sizeY))
+    fig, axes = plt.subplots(sharex=True, sharey=True, figsize=(sizeX, sizeY))
     # Image
-    imin, imax = hUtil.zscale(np.arcsinh(img),
-                              contrast=0.05, samples=500)
+    imin, imax = hUtil.zscale(np.arcsinh(img), contrast=0.05, samples=500)
     imax += 0.001
 
     ax1 = plt.subplot(2, 2, 1)
-    ax1.imshow(np.arcsinh(img), interpolation="none",
-               vmin=imin, vmax=imax, cmap=viridis, origin='lower')
+    ax1.imshow(
+        np.arcsinh(img),
+        interpolation="none",
+        vmin=imin,
+        vmax=imax,
+        cmap=viridis,
+        origin='lower')
     ax1.minorticks_on()
     ax1.xaxis.set_visible(False)
     ax1.yaxis.set_visible(False)
-    ax1.text(0.5, 0.9, 'Coadd Image', fontsize=25, fontweight='bold',
-             ha='center', va='center', color='r',
-             transform=ax1.transAxes)
+    ax1.text(
+        0.5,
+        0.9,
+        'Coadd Image',
+        fontsize=25,
+        fontweight='bold',
+        ha='center',
+        va='center',
+        color='r',
+        transform=ax1.transAxes)
     ax1.plot([150, 269.1], [150, 150], 'r-', lw=2.5)
-    ax1.text(209, 200, '20"', fontsize=15, ha='center',
-             va='center', color='r', fontweight='bold')
+    ax1.text(
+        209,
+        200,
+        '20"',
+        fontsize=15,
+        ha='center',
+        va='center',
+        color='r',
+        fontweight='bold')
     ax1.margins(0.00, 0.00, tight=True)
 
     # Variance
-    smin, smax = hUtil.zscale(np.arcsinh(var),
-                              contrast=0.05, samples=500)
+    smin, smax = hUtil.zscale(np.arcsinh(var), contrast=0.05, samples=500)
     smax += 0.01
 
     ax2 = plt.subplot(2, 2, 2)
-    ax2.imshow(np.arcsinh(var), interpolation="none",
-               vmin=smin, vmax=smax, cmap=viridis, origin='lower')
+    ax2.imshow(
+        np.arcsinh(var),
+        interpolation="none",
+        vmin=smin,
+        vmax=smax,
+        cmap=viridis,
+        origin='lower')
 
     ax2.minorticks_on()
     ax2.xaxis.set_visible(False)
     ax2.yaxis.set_visible(False)
-    ax2.text(0.5, 0.9, 'Variance', fontsize=25, fontweight='bold',
-             ha='center', va='center', color='r',
-             transform=ax2.transAxes)
+    ax2.text(
+        0.5,
+        0.9,
+        'Variance',
+        fontsize=25,
+        fontweight='bold',
+        ha='center',
+        va='center',
+        color='r',
+        transform=ax2.transAxes)
 
     # Mask
     ax3 = plt.subplot(2, 2, 3)
-    ax3.imshow((msk * 2) + det, cmap=viridis_r,
-               origin='lower')
+    ax3.imshow((msk * 2) + det, cmap=viridis_r, origin='lower')
 
     ax3.minorticks_on()
     ax3.xaxis.set_visible(False)
     ax3.yaxis.set_visible(False)
-    ax3.text(0.5, 0.9, 'Mask Plane', fontsize=25, fontweight='bold',
-             ha='center', va='center', color='r',
-             transform=ax3.transAxes)
+    ax3.text(
+        0.5,
+        0.9,
+        'Mask Plane',
+        fontsize=25,
+        fontweight='bold',
+        ha='center',
+        va='center',
+        color='r',
+        transform=ax3.transAxes)
     # If necessary, outline the BBox of each overlapped Patch
-    if ((oriX is not None) and (oriY is not None) and (
-       boxW is not None) and (boxH is not None)):
+    if ((oriX is not None) and (oriY is not None) and (boxW is not None) and
+            (boxH is not None)):
         numBox = len(oriX)
         for ii in range(numBox):
-            box = mpatches.Rectangle((oriX[ii], oriY[ii]), boxW[ii], boxH[ii],
-                                     fc="none", ec='r',
-                                     linewidth=3.5, alpha=0.6,
-                                     linestyle='dashed')
+            box = mpatches.Rectangle(
+                (oriX[ii], oriY[ii]),
+                boxW[ii],
+                boxH[ii],
+                fc="none",
+                ec='r',
+                linewidth=3.5,
+                alpha=0.6,
+                linestyle='dashed')
             ax3.add_patch(box)
 
     # Masked Image
     imgMsk = copy.deepcopy(img)
     imgMsk[(msk > 0) | (det > 0)] = np.nan
 
-    mmin, mmax = hUtil.zscale(np.arcsinh(img),
-                              contrast=0.75, samples=500)
+    mmin, mmax = hUtil.zscale(np.arcsinh(img), contrast=0.75, samples=500)
     mmax += 0.01
     ax4 = plt.subplot(2, 2, 4)
-    ax4.imshow(np.arcsinh(imgMsk), interpolation="none",
-               vmin=mmin, vmax=mmax, cmap=viridis, origin='lower')
+    ax4.imshow(
+        np.arcsinh(imgMsk),
+        interpolation="none",
+        vmin=mmin,
+        vmax=mmax,
+        cmap=viridis,
+        origin='lower')
     ax4.minorticks_on()
     ax4.xaxis.set_visible(False)
     ax4.yaxis.set_visible(False)
-    ax4.text(0.5, 0.9, 'Masked Image', fontsize=25, fontweight='bold',
-             ha='center', va='center', color='r',
-             transform=ax4.transAxes)
+    ax4.text(
+        0.5,
+        0.9,
+        'Masked Image',
+        fontsize=25,
+        fontweight='bold',
+        ha='center',
+        va='center',
+        color='r',
+        transform=ax4.transAxes)
 
     # Adjust the figure
-    plt.subplots_adjust(hspace=0.0, wspace=0.0, bottom=0.0,
-                        top=1.0, right=1.0, left=0.0)
+    plt.subplots_adjust(
+        hspace=0.0, wspace=0.0, bottom=0.0, top=1.0, right=1.0, left=0.0)
 
     # Save a PNG file
     if outPNG is None:
@@ -249,10 +310,19 @@ def getCircleRaDec(ra, dec, size):
     return raList, decList
 
 
-def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
-                     filt='HSC-I', prefix='hsc_coadd_cutout',
-                     circleMatch=True, verbose=True, extraField1=None,
-                     extraValue1=None, butler=None):
+def coaddImageCutout(root,
+                     ra,
+                     dec,
+                     size,
+                     saveMsk=True,
+                     saveSrc=True,
+                     filt='HSC-I',
+                     prefix='hsc_coadd_cutout',
+                     circleMatch=True,
+                     verbose=True,
+                     extraField1=None,
+                     extraValue1=None,
+                     butler=None):
     """Cutout coadd image around a RA, DEC."""
     pipeVersion = dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
     if StrictVersion(pipeVersion) >= StrictVersion('3.9.0'):
@@ -266,13 +336,13 @@ def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
             if verbose:
                 print SEP
                 print "## Load in the Butler"
-        except:
+        except Exception:
             raise Exception("### Can not load the Butler")
     skyMap = butler.get("deepCoadd_skyMap", immediate=True)
 
     # Get the expected cutout size
     dimExpect = (2 * size + 1)
-    sizeExpect = dimExpect ** 2
+    sizeExpect = dimExpect**2
     # Cutout size in unit of degree
     sizeDeg = size * 0.168 / 3600.0
 
@@ -284,7 +354,7 @@ def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
 
     # First, search for the central (Ra, Dec)
     # Define the Ra, Dec pair
-    coord = afwCoord.IcrsCoord(ra*afwGeom.degrees, dec*afwGeom.degrees)
+    coord = afwCoord.IcrsCoord(ra * afwGeom.degrees, dec * afwGeom.degrees)
 
     # Search for overlapped tract, patch pairs
     matches = skyMap.findClosestTractPatchList([coord])
@@ -311,9 +381,12 @@ def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
         # Try to load the coadd Exposure; the skymap covers larger area than
         # available data, which will cause Butler to fail sometime
         try:
-            coadd = butler.get(coaddData, tract=tractId,
-                               patch=patchId, filter=filt,
-                               immediate=True)
+            coadd = butler.get(
+                coaddData,
+                tract=tractId,
+                patch=patchId,
+                filter=filt,
+                immediate=True)
         except Exception, errMsg:
             print WAR
             print " The desired coordinate is not available !!! "
@@ -391,11 +464,11 @@ def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
             if partialCut:
                 warnings.warn("## Only part of the region is available" +
                               " : %d, %s" % (tractId, patchId))
-                outPre = (prefix + '_' + str(tractId) + '_' +
-                          patchId + '_' + filt + '_cent')
+                outPre = (prefix + '_' + str(tractId) + '_' + patchId + '_' +
+                          filt + '_cent')
             else:
-                outPre = (prefix + '_' + str(tractId) + '_' +
-                          patchId + '_' + filt + '_full')
+                outPre = (prefix + '_' + str(tractId) + '_' + patchId + '_' +
+                          filt + '_full')
             # Define the output file name
             outImg = outPre + '.fits'
             outPsf = outPre + '_psf.fits'
@@ -421,33 +494,36 @@ def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
                 """ Sometimes the forced photometry catalog is missing """
                 try:
                     # TODO: Maybe the measurement catalog is better
-                    srcCat = butler.get('deepCoadd_meas', tract=tractId,
-                                        patch=patchId, filter=filt,
-                                        immediate=True,
-                                        flags=afwTable.SOURCE_IO_NO_FOOTPRINTS)
+                    srcCat = butler.get(
+                        'deepCoadd_meas',
+                        tract=tractId,
+                        patch=patchId,
+                        filter=filt,
+                        immediate=True,
+                        flags=afwTable.SOURCE_IO_NO_FOOTPRINTS)
                     # Get the pixel coordinates for all objects
-                    srcRa = np.array(map(lambda x:
-                                         x.get('coord').getRa().asDegrees(),
-                                         srcCat))
-                    srcDec = np.array(map(lambda x:
-                                      x.get('coord').getDec().asDegrees(),
-                                      srcCat))
+                    srcRa = np.array(
+                        map(lambda x: x.get('coord').getRa().asDegrees(),
+                            srcCat))
+                    srcDec = np.array(
+                        map(lambda x: x.get('coord').getDec().asDegrees(),
+                            srcCat))
                     # Simple Box match
-                    indMatch = ((srcRa > (ra - sizeDeg)) & (
-                                srcRa < (ra + sizeDeg)) &
-                                (srcDec > (dec - sizeDeg)) & (
-                                srcDec < (dec + sizeDeg)))
+                    indMatch = ((srcRa > (ra - sizeDeg)) & (srcRa <
+                                                            (ra + sizeDeg)) &
+                                (srcDec > (dec - sizeDeg)) & (srcDec <
+                                                              (dec + sizeDeg)))
                     # Extract the matched subset
                     srcMatch = srcCat.subset(indMatch)
                     # Save the src catalog to a FITS file
                     outSrc = outPre + '_src.fits'
                     srcMatch.writeFits(outSrc)
-                except:
+                except Exception:
                     print "### Tract: %d  Patch: %s" % (tractId, patchId)
                     warnings.warn("### Can not find the *force catalog !")
                     noSrcFile = prefix + '_nosrc_' + filt + '.lis'
                     if not os.path.isfile(noSrcFile):
-                        dum = os.system('touch ' + noSrcFile)
+                        os.system('touch ' + noSrcFile)
                     with open(noSrcFile, "a") as noSrc:
                         try:
                             noSrc.write("%d  %s \n" % (tractId, patchId))
@@ -498,9 +574,12 @@ def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
                 # larger area than the available data, which will
                 # cause Butler to fail sometime
                 try:
-                    coadd = butler.get(coaddData, tract=tractId,
-                                       patch=patchId, filter=filt,
-                                       immediate=True)
+                    coadd = butler.get(
+                        coaddData,
+                        tract=tractId,
+                        patch=patchId,
+                        filter=filt,
+                        immediate=True)
 
                 except Exception, errMsg:
 
@@ -563,8 +642,8 @@ def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
                         subHead.set(extraField1, extraValue1)
 
                     # To see if data are available for all the cut-out region
-                    outPre = (prefix + '_' + str(tractId) + '_' +
-                              patchId + '_' + filt + '_part')
+                    outPre = (prefix + '_' + str(tractId) + '_' + patchId + '_'
+                              + filt + '_part')
                     # Define the output file name
                     outImg = outPre + '.fits'
                     # Save the cutout image to a new FITS file
@@ -586,10 +665,20 @@ def coaddImageCutout(root, ra, dec, size, saveMsk=True, saveSrc=True,
     return coaddFound, noData, partialCut
 
 
-def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
-                      filt='HSC-I', prefix='hsc_coadd_cutout', verbose=True,
-                      extraField1=None, extraValue1=None, butler=None,
-                      visual=True, imgOnly=False):
+def coaddImageCutFull(root,
+                      ra,
+                      dec,
+                      size,
+                      saveSrc=True,
+                      savePsf=True,
+                      filt='HSC-I',
+                      prefix='hsc_coadd_cutout',
+                      verbose=True,
+                      extraField1=None,
+                      extraValue1=None,
+                      butler=None,
+                      visual=True,
+                      imgOnly=False):
     """Get the cutout around a location."""
     # Deal with the Pipeline Version
     pipeVersion = dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
@@ -619,7 +708,7 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
         raise Exception("## Wrong Filter for HSC Data!")
 
     # (Ra, Dec) Pair for the center
-    raDec = afwCoord.Coord(ra*afwGeom.degrees, dec*afwGeom.degrees)
+    raDec = afwCoord.Coord(ra * afwGeom.degrees, dec * afwGeom.degrees)
     # [Ra, Dec] list
     raList, decList = cdColor.getCircleRaDec(ra, dec, size)
     points = map(lambda x, y: afwGeom.Point2D(x, y), raList, decList)
@@ -627,8 +716,8 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
 
     # Expected size and center position
     dimExpect = int(2 * size + 1)
-    cenExpect = (dimExpect/2.0, dimExpect/2.0)
-    sizeExpect = int(dimExpect ** 2)
+    cenExpect = (dimExpect / 2.0, dimExpect / 2.0)
+    sizeExpect = int(dimExpect**2)
     # Get the half size of the image in degree
     sizeDegree = size * 0.168 / 3600.0
 
@@ -691,9 +780,12 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
         # Check if the coordinate is available in all three bands.
         try:
             # Get the coadded exposure
-            coadd = butler.get(coaddData, tract=tract,
-                               patch=patch, filter=filt,
-                               immediate=True)
+            coadd = butler.get(
+                coaddData,
+                tract=tract,
+                patch=patch,
+                filter=filt,
+                immediate=True)
         except Exception, errMsg:
             print WAR
             print " No data is available in %d - %s" % (tract, patch)
@@ -751,14 +843,13 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
             bbox.clip(coadd.getBBox(afwImage.PARENT))
             # Get the masked image
             try:
-                subImage = afwImage.ExposureF(coadd, bbox,
-                                              afwImage.PARENT)
+                subImage = afwImage.ExposureF(coadd, bbox, afwImage.PARENT)
             except Exception:
                 print WAR
                 print '### SOMETHING IS WRONG WITH THIS BOUNDING BOX !!'
                 print "    %d -- %s -- %s " % (tract, patch, filt)
-                print "    Bounding Box Size: %d" % (bbox.getWidth() *
-                                                     bbox.getHeight())
+                print "    Bounding Box Size: %d" % (
+                    bbox.getWidth() * bbox.getHeight())
             else:
                 # Extract the image array
                 imgArr.append(subImage.getMaskedImage().getImage().getArray())
@@ -785,17 +876,24 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
                         """
                         try:
                             print "    !!!! TRY deepCoadd_meas"
-                            srcCat = butler.get('deepCoadd_meas', tract=tract,
-                                                patch=patch, filter=filt,
-                                                immediate=True,
-                                                flags=noFootprint)
+                            srcCat = butler.get(
+                                'deepCoadd_meas',
+                                tract=tract,
+                                patch=patch,
+                                filter=filt,
+                                immediate=True,
+                                flags=noFootprint)
                             # Get the pixel coordinates for all objects
-                            srcRa = np.array(map(lambda x:
-                                             x.get('coord').getRa().asDegrees(),
-                                             srcCat))
-                            srcDec = np.array(map(lambda x:
-                                              x.get('coord').getDec().asDegrees(),
-                                              srcCat))
+                            srcRa = np.array(
+                                    map(lambda x:
+                                        x.get('coord').getRa().asDegrees(),
+                                        srcCat)
+                                    )
+                            srcDec = np.array(
+                                    map(lambda x:
+                                        x.get('coord').getDec().asDegrees(),
+                                        srcCat)
+                                    )
                             # Simple Box match
                             indMatch = ((srcRa > (ra - sizeDegree)) &
                                         (srcRa < (ra + sizeDegree)) &
@@ -810,26 +908,30 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
                             # 1. Reference
                             try:
                                 print "    !!!! TRY deepCoadd_ref"
-                                refCat = butler.get('deepCoadd_ref',
-                                                    tract=tract,
-                                                    patch=patch, filter=filt,
-                                                    immediate=True,
-                                                    flags=noFootprint)
+                                refCat = butler.get(
+                                    'deepCoadd_ref',
+                                    tract=tract,
+                                    patch=patch,
+                                    filter=filt,
+                                    immediate=True,
+                                    flags=noFootprint)
                                 refArr.append(refCat.subset(indMatch))
-                            except:
+                            except Exception:
                                 warnings.warn('### No *ref catalog!')
                             # 2. Forced Photometry
                             try:
                                 print "    !!!! TRY deepCoadd_forced_src"
-                                forceCat = butler.get('deepCoadd_forced_src',
-                                                      tract=tract,
-                                                      patch=patch, filter=filt,
-                                                      immediate=True,
-                                                      flags=noFootprint)
+                                forceCat = butler.get(
+                                    'deepCoadd_forced_src',
+                                    tract=tract,
+                                    patch=patch,
+                                    filter=filt,
+                                    immediate=True,
+                                    flags=noFootprint)
                                 forceArr.append(forceCat.subset(indMatch))
-                            except:
+                            except Exception:
                                 warnings.warn('### No *force catalog!')
-                        except:
+                        except Exception:
                             print WAR
                             print "### Tract: %d  Patch: %s" % (tract, patch)
                             warnings.warn("### No photometry catalog!")
@@ -858,8 +960,8 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
                 trList.append(tract)
                 paList.append(patch)
                 # Photometric zeropoint
-                zpList.append(2.5 * np.log10(
-                              coadd.getCalib().getFluxMag0()[0]))
+                zpList.append(
+                    2.5 * np.log10(coadd.getCalib().getFluxMag0()[0]))
                 # If necessary, save the psf images
                 if savePsf and (not imgOnly):
                     psfImg = getCoaddPsfImage(coadd, raDec)
@@ -883,23 +985,23 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
             ind = indSize[n]
             # Put in the image array
             imgUse = imgArr[ind]
-            imgEmpty[newY[ind]:(newY[ind] + boxY[ind]),
-                     newX[ind]:(newX[ind] + boxX[ind])] = imgUse[:, :]
+            imgEmpty[newY[ind]:(newY[ind] + boxY[ind]), newX[ind]:(
+                newX[ind] + boxX[ind])] = imgUse[:, :]
             # Put in the mask array
             if not imgOnly:
                 mskUse = mskArr[ind]
-                mskEmpty[newY[ind]:(newY[ind] + boxY[ind]),
-                         newX[ind]:(newX[ind] + boxX[ind])] = mskUse[:, :]
+                mskEmpty[newY[ind]:(newY[ind] + boxY[ind]), newX[ind]:(
+                    newX[ind] + boxX[ind])] = mskUse[:, :]
                 # Put in the variance array
                 varUse = varArr[ind]
-                varEmpty[newY[ind]:(newY[ind] + boxY[ind]),
-                         newX[ind]:(newX[ind] + boxX[ind])] = varUse[:, :]
+                varEmpty[newY[ind]:(newY[ind] + boxY[ind]), newX[ind]:(
+                    newX[ind] + boxX[ind])] = varUse[:, :]
                 # Convert it into sigma array
                 sigEmpty = np.sqrt(varEmpty)
                 # Put in the detection mask array
                 detUse = detArr[ind]
-                detEmpty[newY[ind]:(newY[ind] + boxY[ind]),
-                         newX[ind]:(newX[ind] + boxX[ind])] = detUse[:, :]
+                detEmpty[newY[ind]:(newY[ind] + boxY[ind]), newX[ind]:(
+                    newX[ind] + boxX[ind])] = detUse[:, :]
             if n is (nReturn - 1):
                 # This is the largest available sub-image
                 phoZp = zpList[ind]
@@ -936,8 +1038,7 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
         outWcs.wcs.crpix = [newCenX + 1, newCenY + 1]
         outWcs.wcs.crval = [ra, dec]
         outWcs.wcs.ctype = ["RA---TAN", "DEC--TAN"]
-        outWcs.wcs.cdelt = np.array([cdMatrix[0][0],
-                                     cdMatrix[1][1]])
+        outWcs.wcs.cdelt = np.array([cdMatrix[0][0], cdMatrix[1][1]])
         # Output to header
         outHead = outWcs.to_header()
         outHead.set("PIXEL", pixScale, "Pixel Scale [arcsec/pix]")
@@ -985,9 +1086,16 @@ def coaddImageCutFull(root, ra, dec, size, saveSrc=True, savePsf=True,
             if visual:
                 pngOut = outPre + '_pre.png'
                 if not imgOnly:
-                    previewCoaddImage(imgEmpty, mskEmpty, varEmpty, detEmpty,
-                                      oriX=newX, oriY=newY, boxW=boxX,
-                                      boxH=boxY, outPNG=pngOut)
+                    previewCoaddImage(
+                        imgEmpty,
+                        mskEmpty,
+                        varEmpty,
+                        detEmpty,
+                        oriX=newX,
+                        oriY=newY,
+                        boxW=boxX,
+                        boxH=boxY,
+                        outPNG=pngOut)
         else:
             cutFound = False
             print WAR
@@ -1006,18 +1114,26 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("root", help="Root directory of data repository")
-    parser.add_argument("ra",   type=float, help="RA  to search")
-    parser.add_argument("dec",  type=float, help="Dec to search")
+    parser.add_argument("ra", type=float, help="RA  to search")
+    parser.add_argument("dec", type=float, help="Dec to search")
     parser.add_argument("size", type=float, help="Half size of the cutout box")
-    parser.add_argument('-f', '--filter', dest='filt', help="Filter",
-                        default='HSC-I')
-    parser.add_argument('-p', '--prefix', dest='outfile',
-                        help='Prefix of the output file',
-                        default='hsc_coadd_cutout')
-    parser.add_argument('-i', '--imgOnly', action="store_true",
-                        dest='imgOnly', default=False)
+    parser.add_argument(
+        '-f', '--filter', dest='filt', help="Filter", default='HSC-I')
+    parser.add_argument(
+        '-p',
+        '--prefix',
+        dest='outfile',
+        help='Prefix of the output file',
+        default='hsc_coadd_cutout')
+    parser.add_argument(
+        '-i', '--imgOnly', action="store_true", dest='imgOnly', default=False)
     args = parser.parse_args()
 
-    coaddImageCutFull(args.root, args.ra, args.dec, args.size,
-                      filt=args.filt, prefix=args.outfile,
-                      imgOnly=args.imgOnly)
+    coaddImageCutFull(
+        args.root,
+        args.ra,
+        args.dec,
+        args.size,
+        filt=args.filt,
+        prefix=args.outfile,
+        imgOnly=args.imgOnly)
