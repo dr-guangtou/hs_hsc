@@ -21,17 +21,18 @@ import numpy as np
 # Astropy
 from astropy import wcs as apWcs
 from astropy.io import fits
-# Matplotlib
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
 # Personal
 import coaddColourImage as cdColor
 import hscUtils as hUtil
 
-# Default colormap
+# Matplotlib
+import matplotlib as mpl
 mpl.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
+# Default colormap
 viridis = plt.get_cmap('viridis')
 viridis.set_bad('k', 1.)
 viridis_r = plt.get_cmap('viridis_r')

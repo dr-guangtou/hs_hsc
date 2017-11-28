@@ -12,10 +12,6 @@ import numpy as np
 
 from distutils.version import StrictVersion
 
-# Matplotlib related
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
 # Scipy
 import scipy.ndimage as ndimage
 
@@ -28,6 +24,23 @@ import ds9Reg2Mask as reg2Mask
 
 # SEP
 import sep
+
+# Matplotlib related
+import matplotlib as mpl
+from matplotlib.patches import Ellipse
+mpl.use('Agg')
+mpl.rcParams['figure.figsize'] = 12, 10
+mpl.rcParams['xtick.major.size'] = 8.0
+mpl.rcParams['xtick.major.width'] = 1.5
+mpl.rcParams['xtick.minor.size'] = 4.0
+mpl.rcParams['xtick.minor.width'] = 1.5
+mpl.rcParams['ytick.major.size'] = 8.0
+mpl.rcParams['ytick.major.width'] = 1.5
+mpl.rcParams['ytick.minor.size'] = 4.0
+mpl.rcParams['ytick.minor.width'] = 1.5
+mpl.rc('axes', linewidth=2)
+import matplotlib.pyplot as plt
+plt.ioff()
 
 sepVersion = sep.__version__
 if StrictVersion(sepVersion) < StrictVersion('0.5.0'):
@@ -43,18 +56,6 @@ cmap2 = plt.get_cmap('tab20b')
 cmap3 = plt.get_cmap('viridis')
 cmap3.set_bad('k', 1.)
 
-mpl.use('Agg')
-mpl.rcParams['figure.figsize'] = 12, 10
-mpl.rcParams['xtick.major.size'] = 8.0
-mpl.rcParams['xtick.major.width'] = 1.5
-mpl.rcParams['xtick.minor.size'] = 4.0
-mpl.rcParams['xtick.minor.width'] = 1.5
-mpl.rcParams['ytick.major.size'] = 8.0
-mpl.rcParams['ytick.major.width'] = 1.5
-mpl.rcParams['ytick.minor.size'] = 4.0
-mpl.rcParams['ytick.minor.width'] = 1.5
-mpl.rc('axes', linewidth=2)
-plt.ioff()
 
 COM = '#' * 100
 SEP = '-' * 100

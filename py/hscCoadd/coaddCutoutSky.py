@@ -18,10 +18,6 @@ from astropy.io import fits
 # AstroML
 from astroML.plotting import hist
 
-# Matplotlib related
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
 # SEP
 import sep
 
@@ -29,6 +25,8 @@ import sep
 import hscUtils as hUtil
 import coaddCutoutPrepare as cdPrep
 
+# Matplotlib related
+import matplotlib as mpl
 mpl.use('Agg')
 mpl.rcParams['figure.figsize'] = 12, 10
 mpl.rcParams['xtick.major.size'] = 8.0
@@ -40,6 +38,7 @@ mpl.rcParams['ytick.major.width'] = 1.5
 mpl.rcParams['ytick.minor.size'] = 4.0
 mpl.rcParams['ytick.minor.width'] = 1.5
 mpl.rc('axes', linewidth=2)
+import matplotlib.pyplot as plt
 plt.ioff()
 
 COM = '#' * 100
