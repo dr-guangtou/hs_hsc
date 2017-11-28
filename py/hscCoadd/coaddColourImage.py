@@ -14,8 +14,8 @@ import lsst.afw.coord as afwCoord
 import lsst.afw.image as afwImage
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 mpl.use('Agg')
+import matplotlib.pyplot as plt
 plt.ioff()
 
 COM = '#' * 100

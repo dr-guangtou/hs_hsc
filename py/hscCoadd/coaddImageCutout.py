@@ -30,13 +30,13 @@ import hscUtils as hUtil
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+plt.ioff()
 import matplotlib.patches as mpatches
 
 # Default colormap
 viridis = plt.get_cmap('viridis')
 viridis.set_bad('k', 1.)
 viridis_r = plt.get_cmap('viridis_r')
-plt.ioff()
 
 COM = '#' * 100
 SEP = '-' * 100
