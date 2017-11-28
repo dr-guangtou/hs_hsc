@@ -10,34 +10,39 @@ import glob
 import argparse
 import numpy as np
 
+from distutils.version import StrictVersion
+
+# Matplotlib related
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
+# Scipy
+import scipy.ndimage as ndimage
+
 # Astropy
 from astropy.io import fits
+
+# Personal
+import hscUtils as hUtil
+import ds9Reg2Mask as reg2Mask
 
 # SEP
 import sep
 
-from distutils.version import StrictVersion
 sepVersion = sep.__version__
 if StrictVersion(sepVersion) < StrictVersion('0.5.0'):
     raise Exception(
         'XXX SEP Version should be higher than 0.5.0; \n Please Update!!')
-# Cubehelix color scheme from https://github.com/jradavenport/cubehelixscheme
-import cubehelix
-# For high-contrast image
-cmap1 = cubehelix.cmap(start=0.5, rot=-0.8, gamma=1.0,
-                       minSat=1.2, maxSat=1.2,
-                       minLight=0.0, maxLight=1.0)
+
+# For image
+cmap1 = plt.get_cmap('viridis')
 cmap1.set_bad('k', 1.)
 # For Mask
-cmap2 = cubehelix.cmap(start=2.0, rot=-1.0, gamma=2.5,
-                       minSat=1.2, maxSat=1.2,
-                       minLight=0.0, maxLight=1.0, reverse=True)
+cmap2 = plt.get_cmap('tab20b')
 # For Sigma
-cmap3 = cubehelix.cmap(start=0.5, rot=-0.8, gamma=1.2,
-                       minSat=1.2, maxSat=1.2,
-                       minLight=0.0, maxLight=1.0)
-# Matplotlib related
-import matplotlib as mpl
+cmap3 = plt.get_cmap('viridis')
+cmap3.set_bad('k', 1.)
+
 mpl.use('Agg')
 mpl.rcParams['figure.figsize'] = 12, 10
 mpl.rcParams['xtick.major.size'] = 8.0
@@ -49,15 +54,7 @@ mpl.rcParams['ytick.major.width'] = 1.5
 mpl.rcParams['ytick.minor.size'] = 4.0
 mpl.rcParams['ytick.minor.width'] = 1.5
 mpl.rc('axes', linewidth=2)
-import matplotlib.pyplot as plt
 plt.ioff()
-from matplotlib.patches import Ellipse
-# Scipy
-import scipy.ndimage as ndimage
-
-# Personal
-import hscUtils as hUtil
-import ds9Reg2Mask as reg2Mask
 
 COM = '#' * 100
 SEP = '-' * 100
@@ -819,7 +816,7 @@ def readCutoutHeader(imgHead, pixDefault=0.168,
     # Get the pixel scale of the image
     try:
         pixScaleX = pixScaleY = imgHead['PIXEL']
-    except:
+    except Exception:
         print WAR
         print "### Pixel scale keyword is not available in the header"
         print "### Default %6.3f arcsec/pixel value is adopted" % pixDefault
@@ -830,7 +827,7 @@ def readCutoutHeader(imgHead, pixDefault=0.168,
     # Get the photometric zeropoint
     try:
         photZP = imgHead['PHOTZP']
-    except:
+    except Exception:
         print WAR
         print "### PHOZP keyword is not available in the header"
         print "### Default value of %5.2f is adopted!" % zpDefault
@@ -838,7 +835,7 @@ def readCutoutHeader(imgHead, pixDefault=0.168,
     # Total exptime
     try:
         expTot = imgHead['TOTEXPT']
-    except:
+    except Exception:
         print WAR
         print "### TOTEXPT keyword is not available in the header"
         print "### Use 1.0 sec instead"
