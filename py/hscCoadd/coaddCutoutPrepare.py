@@ -855,6 +855,16 @@ def imgByteSwap(data):
     return dataCopy.byteswap(True).newbyteorder()
 
 
+def sepValidObjects(obj):
+    """
+    Remove objects with negative flux or small size.
+    """
+    obj_clean = obj[(obj['flux'] > 0.0) &
+                    (obj['a'] > 0.01)]
+
+    return obj_clean
+
+
 def sepGetBkg(img, mask=None, bkgSize=None, bkgFilter=None):
     """
     Wrapper of SEP.Background function.
@@ -1208,6 +1218,9 @@ def coaddCutoutPrepare(prefix, root=None, verbose=True,
         print "###    %d objects have been detected in the \
                 Cold Run" % objC['x'].shape[0]
 
+    # Clean the objects
+    objC = sepValidObjects(objC)
+
     """
     Save objects list to different format of files
     """
@@ -1402,6 +1415,9 @@ def coaddCutoutPrepare(prefix, root=None, verbose=True,
     if verbose:
         print "###    %d objects have been detected in the \
                 Hot Run" % objH['x'].shape[0]
+
+    # Clean the objects
+    objH = sepValidObjects(objH)
 
     """
     Save objects list to different format of files
