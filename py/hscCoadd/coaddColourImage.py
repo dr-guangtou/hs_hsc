@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Generate color picture of HSC cutout."""
 
-from __future__ import division
+from __future__ import (division, print_function)
 
 import argparse
 import numpy as np
@@ -192,8 +192,7 @@ def coaddColourImage(root,
         try:
             butler = dafPersist.Butler(root)
         except Exception:
-            print WAR
-            print '### Can not load the correct Butler!'
+            print('\n### Can not load the correct Butler!')
     skyMap = butler.get("deepCoadd_skyMap", immediate=True)
 
     # [Ra, Dec] pair
@@ -226,21 +225,10 @@ def coaddColourImage(root,
         filter1 = "HSC-%s" % filt[0].upper()
         filter2 = "HSC-%s" % filt[1].upper()
         filter3 = "HSC-%s" % filt[2].upper()
-        # Get the metadata
-        """
-        md1 = butler.get("deepCoadd_md", immediate=True,
-                         tract=tract, patch=patch, filter=filter1)
-        md2 = butler.get("deepCoadd_md", immediate=True,
-                         tract=tract, patch=patch, filter=filter2)
-        md3 = butler.get("deepCoadd_md", immediate=True,
-                         tract=tract, patch=patch, filter=filter3)
-        """
         filtArr = [filter1, filter2, filter3]
     except Exception, errMsg:
-        print "#############################################"
-        print " The desired coordinate is not available !!! "
-        print "#############################################"
-        print errMsg
+        print("\n !!! The desired coordinate is not available !!! ")
+        print(errMsg)
     else:
         # Then we can read the desired pixels
         images = {}
@@ -292,14 +280,12 @@ def coaddColourImage(root,
                 localMax = np.max(imgPad[cenExpect[0] - 10:cenExpect[0] + 10,
                                          cenExpect[1] - 10:cenExpect[1] + 10])
                 maxArr.append(localMax / globalMax)
-                # print "### %d : %6.3f" % (m+1, localMax/globalMax)
             maxShow = np.max(np.asarray(maxArr))
         else:
             maxShow = max
         # To see if data are available for all the cut-out region
         if (bCut.getHeight() < dimExpect) or (bCut.getWidth() < dimExpect):
-            print WAR
-            print " ### Only part of the desired cutout-region is returned !"
+            print("\n### Only part of the desired cutout-region is returned !")
             # Define the name of the output file
             outRgb = prefix + '_' + filt + '_part_color.png'
             partial = True
@@ -411,12 +397,9 @@ def coaddColourImageFull(root,
     if butler is None:
         try:
             butler = dafPersist.Butler(root)
-            if verbose:
-                print SEP
-                print "### Load in the Butler"
         except Exception:
-            print WAR
-            print '### Can not load the correct Butler!'
+            print('\n### Can not load the correct Butler!')
+
     skyMap = butler.get("deepCoadd_skyMap", immediate=True)
 
     # [Ra, Dec] list
@@ -438,6 +421,7 @@ def coaddColourImageFull(root,
     elif not (isHscFilter(filt[0]) & isHscFilter(filt[1]) &
               isHscFilter(filt[2])):
         raise Exception("Not all filters are valid !")
+
     # Get the correct HSC filter name
     filter1 = "HSC-%s" % filt[0].upper()
     filter2 = "HSC-%s" % filt[1].upper()
@@ -445,6 +429,7 @@ def coaddColourImageFull(root,
     filtArr = [filter1, filter2, filter3]
     # Cutout size
     cutoutSize = int(size)
+
     """
     Figure out the area we want, and read the data.
     For coadds the WCS is the same in all bands,
@@ -454,11 +439,11 @@ def coaddColourImageFull(root,
     matches = skyMap.findTractPatchList(raDecList)
     tractList, patchList = getTractPatchList(matches)
     nPatch = len(patchList)
+
     # Output RGB image
     if verbose:
-        print SEP
-        print "### WILL DEAL WITH %d (TRACT, PATCH)" % nPatch
-        print SEP
+        print("\n### WILL DEAL WITH %d (TRACT, PATCH)" % nPatch)
+
     outRgb = prefix + '_' + filt + '_color.png'
 
     newX = []
@@ -472,7 +457,7 @@ def coaddColourImageFull(root,
         # Tract, patch
         tract, patch = tractList[j], patchList[j]
         if verbose:
-            print "### Dealing with %d - %s" % (tract, patch)
+            print("\n### Dealing with %d - %s" % (tract, patch))
         # Check if the coordinate is available in all three bands.
         # Change the method, try to generate something as long as it is
         # covered by at least one band
@@ -508,9 +493,8 @@ def coaddColourImageFull(root,
                 bXbegin = bbox.getBeginX()
                 bYbegin = bbox.getBeginY()
             except Exception:
-                print WAR
-                print "### Not available in %d - %s - %s" % (tract, patch,
-                                                             filtArr[i])
+                print("\n### Not available in %d - %s - %s" % (tract, patch,
+                                                               filtArr[i]))
                 images[i] = None
 
         if not ((images[0] is None) and (images[1] is None) and
@@ -551,16 +535,13 @@ def coaddColourImageFull(root,
             rgbArr.append(imgRgb)
         else:
             # Bypass the bad data
-            print WAR
-            print "### NO DATA IS AVAILABLE IN %d - %s" % (tract, patch)
-            print WAR
+            print("\n### NO DATA IS AVAILABLE IN %d - %s" % (tract, patch))
 
     # Number of returned RGB image
     nReturn = len(rgbArr)
     if verbose:
-        print "### Return %d Useful Images" % nReturn
+        print("\n### Return %d Useful Images" % nReturn)
     if nReturn > 0:
-        # XXX Test, should be removed later
         if len(rgbArr) != len(boxSize):
             raise Exception("### Something is weird here !")
         indSize = np.argsort(boxSize)
@@ -593,9 +574,7 @@ def coaddColourImageFull(root,
             sLength=sLength,
             sString=sString)
     else:
-        print WAR
-        print "### NO COLOR IMAGE IS GENERATED FOR THIS OBJECT !!"
-        print WAR
+        print("\n### NO COLOR IMAGE IS GENERATED FOR THIS OBJECT !!")
 
 
 if __name__ == '__main__':

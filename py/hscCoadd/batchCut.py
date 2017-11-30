@@ -2,6 +2,8 @@
 # encoding: utf-8
 """Generate cutout images in batch mode."""
 
+from __future__ import (division, print_function)
+
 import os
 import argparse
 import coaddBatchCutout as cbc

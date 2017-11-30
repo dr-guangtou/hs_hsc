@@ -373,7 +373,6 @@ def singleCut(obj, butler, root, useful, config):
     sample = config['sample']
     colorFilters = config['colorFilters']
     zField = config['zField']
-    sizeField = config['sizeField']
     scaleBar = config['scaleBar']
     verbose = config['verbose']
     noColor = config['noColor']
