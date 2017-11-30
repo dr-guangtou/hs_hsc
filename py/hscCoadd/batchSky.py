@@ -22,7 +22,7 @@ WAR = '!' * 100
 
 def run(args):
     """
-    Run coaddCutoutPrepare in batch mode.
+    Run coaddCutoutSky in batch mode.
 
     Parameters:
     """
@@ -160,7 +160,7 @@ def run(args):
                         logFormat = "%25s  %5s  %3d  %6d  %7.4f  %7.4f" + \
                                     "  %7.4f  %7.4f  %7.4f  \n"
                         logMatch.write(logFormat %
-                                       (galPrefix, filter, args.rebin, np.nan,
+                                       (galPrefix, filter, args.rebin, 0,
                                         np.nan, np.nan, np.nan, np.nan,
                                         np.nan))
                         fcntl.flock(logMatch, fcntl.LOCK_UN)
