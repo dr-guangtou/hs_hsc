@@ -129,7 +129,7 @@ def previewCoaddImage(img,
     scale_bar_y = int(img_size_y * 0.10)
     scale_bar_text_x = (scale_bar_x_0 + scale_bar_x_1) / 2
     scale_bar_text_y = (scale_bar_y * 0.50)
-    scale_bar_text = '20 arcsec$'
+    scale_bar_text = '20 arcsec'
     scale_bar_text_size = 13
 
     ax1.plot([scale_bar_x_0, scale_bar_x_1], [scale_bar_y, scale_bar_y],
@@ -171,8 +171,8 @@ def previewCoaddImage(img,
 
     # Mask
     ax3 = plt.subplot(2, 2, 3)
-    ax3.imshow(det, cmap=SEG_CMAP, alpha=0.4, origin='lower')
-    ax3.imshow(msk, cmap=SEG_CMAP, origin='lower')
+    ax3.imshow(det, cmap=plt.cm.gray, alpha=0.6, origin='lower')
+    ax3.imshow(msk, cmap=SEG_CMAP, alpha=0.9, origin='lower')
 
     ax3.minorticks_on()
     ax3.xaxis.set_visible(False)
@@ -306,11 +306,11 @@ def getCoaddBadMsk(calExp, no_bright_object=False):
     except Exception:
         pass
 
-    try:
-        # Clear the "CLIPPED" plane
-        badMsk.removeAndClearMaskPlane('CLIPPED', True)
-    except Exception:
-        pass
+    # try:
+    #     # Clear the "CLIPPED" plane
+    #     badMsk.removeAndClearMaskPlane('CLIPPED', True)
+    # except Exception:
+    #     pass
 
     try:
         # Clear the "CROSSTALK" plane
