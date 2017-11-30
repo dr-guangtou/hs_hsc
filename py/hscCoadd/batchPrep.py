@@ -2,6 +2,8 @@
 # encoding: utf-8
 """Prepare the HSC cutout for photometry."""
 
+from __future__ import (division, print_function)
+
 import os
 import fcntl
 import logging
@@ -40,14 +42,14 @@ def run(args):
             os.system('touch ' + logFile)
 
         if args.verbose:
-            print "## Will deal with %d galaxies ! " % len(data)
+            print("\n## Will deal with %d galaxies ! " % len(data))
 
         for galaxy in data:
             """ Galaxy ID and prefix """
             galID = str(galaxy[id]).strip()
             galPrefix = prefix + '_' + galID + '_' + filter + '_full'
             if args.verbose:
-                print "## Will Deal with %s now ! " % galID
+                print("\n## Will Deal with %s now ! " % galID)
             """Folder for the data"""
             galRoot = os.path.join(galID, filter)
             if not os.path.isdir(galRoot):
@@ -230,9 +232,8 @@ def run(args):
                         except IOError:
                             pass
             except Exception, errMsg:
-                print WAR
-                print str(errMsg)
-                print WAR
+                print(WAR)
+                print(str(errMsg))
                 warnings.warn('### The preparation is failed for %s in %s' %
                               (galPrefix, filter))
                 logging.warning('### The preparation is failed for %s in %s' %
