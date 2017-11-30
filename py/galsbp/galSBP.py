@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 from matplotlib.ticker import MaxNLocator
 from matplotlib.patches import Ellipse
+"""
 mpl.rcParams['figure.figsize'] = 12, 10
 mpl.rcParams['xtick.major.size'] = 10.0
 mpl.rcParams['xtick.major.width'] = 2.5
@@ -32,6 +33,7 @@ mpl.rcParams['ytick.major.width'] = 2.5
 mpl.rcParams['ytick.minor.size'] = 5.0
 mpl.rcParams['ytick.minor.width'] = 2.5
 mpl.rc('axes', linewidth=3.5)
+"""
 
 # Astropy related
 from astropy.io import fits
