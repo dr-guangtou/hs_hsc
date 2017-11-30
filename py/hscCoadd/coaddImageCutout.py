@@ -31,6 +31,7 @@ import hscUtils as hUtil
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
 plt.ioff()
 import matplotlib.patches as mpatches
 
@@ -42,6 +43,13 @@ viridis_r = plt.get_cmap('viridis_r')
 COM = '#' * 100
 SEP = '-' * 100
 WAR = '!' * 100
+PIXEL_SCALE = 0.168  # arcsec/ pixel
+
+# About the Colormaps
+SEG_CMAP = hUtil.random_cmap(ncolors=512,
+                             background_color=u'white')
+SEG_CMAP.set_bad(color='white')
+SEG_CMAP.set_under(color='white')
 
 
 def saveImageArr(arr, header, name, overwrite=True):
@@ -84,9 +92,11 @@ def previewCoaddImage(img,
 
     Parameters:
     """
-    fig, axes = plt.subplots(sharex=True, sharey=True, figsize=(sizeX, sizeY))
+    fig, axes = plt.subplots(sharex=True, sharey=True,
+                             figsize=(sizeX, sizeY))
     # Image
-    imin, imax = hUtil.zscale(np.arcsinh(img), contrast=0.05, samples=500)
+    imin, imax = hUtil.zscale(np.arcsinh(img), contrast=0.1,
+                              samples=500)
     imax += 0.001
 
     ax1 = plt.subplot(2, 2, 1)
@@ -108,22 +118,32 @@ def previewCoaddImage(img,
         fontweight='bold',
         ha='center',
         va='center',
-        color='r',
+        color='w',
         transform=ax1.transAxes)
-    ax1.plot([150, 269.1], [150, 150], 'r-', lw=2.5)
-    ax1.text(
-        209,
-        200,
-        '20"',
-        fontsize=15,
-        ha='center',
-        va='center',
-        color='r',
-        fontweight='bold')
+
+    # Put scale bar on the image
+    hsc_pixels_20asec = (20.0 / PIXEL_SCALE)
+    (img_size_x, img_size_y) = img.shape
+    scale_bar_x_0 = int(img_size_x * 0.95 - hsc_pixels_20asec)
+    scale_bar_x_1 = int(img_size_x * 0.95)
+    scale_bar_y = int(img_size_y * 0.10)
+    scale_bar_text_x = (scale_bar_x_0 + scale_bar_x_1) / 2
+    scale_bar_text_y = (scale_bar_y * 0.50)
+    scale_bar_text = r'$20^{\prime\prime}$'
+    scale_bar_text_size = 20
+
+    ax1.plot([scale_bar_x_0, scale_bar_x_1], [scale_bar_y, scale_bar_y],
+             linewidth=3, c='w', alpha=1.0)
+    ax1.text(scale_bar_text_x, scale_bar_text_y, scale_bar_text,
+             fontsize=scale_bar_text_size,
+             horizontalalignment='center',
+             color='w')
+
     ax1.margins(0.00, 0.00, tight=True)
 
     # Variance
-    smin, smax = hUtil.zscale(np.arcsinh(var), contrast=0.05, samples=500)
+    smin, smax = hUtil.zscale(np.arcsinh(var),
+                              contrast=0.25, samples=500)
     smax += 0.01
 
     ax2 = plt.subplot(2, 2, 2)
@@ -146,12 +166,14 @@ def previewCoaddImage(img,
         fontweight='bold',
         ha='center',
         va='center',
-        color='r',
+        color='w',
         transform=ax2.transAxes)
 
     # Mask
     ax3 = plt.subplot(2, 2, 3)
-    ax3.imshow((msk * 2) + det, cmap=viridis_r, origin='lower')
+    ax3.imshow((msk * 2) + det,
+               cmap=SEG_CMAP,
+               origin='lower')
 
     ax3.minorticks_on()
     ax3.xaxis.set_visible(False)
@@ -164,8 +186,9 @@ def previewCoaddImage(img,
         fontweight='bold',
         ha='center',
         va='center',
-        color='r',
+        color='w',
         transform=ax3.transAxes)
+
     # If necessary, outline the BBox of each overlapped Patch
     if ((oriX is not None) and (oriY is not None) and (boxW is not None) and
             (boxH is not None)):
@@ -207,17 +230,18 @@ def previewCoaddImage(img,
         fontweight='bold',
         ha='center',
         va='center',
-        color='r',
+        color='w',
         transform=ax4.transAxes)
 
     # Adjust the figure
     plt.subplots_adjust(
-        hspace=0.0, wspace=0.0, bottom=0.0, top=1.0, right=1.0, left=0.0)
+        hspace=0.0, wspace=0.0, bottom=0.0, top=1.0,
+        right=1.0, left=0.0)
 
     # Save a PNG file
     if outPNG is None:
         outPNG = prefix + '_pre.png'
-    plt.savefig(outPNG, dpi=80)
+    plt.savefig(outPNG, dpi=70)
     plt.close(fig)
 
 
