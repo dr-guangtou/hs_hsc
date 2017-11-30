@@ -29,7 +29,9 @@ import hscUtils as hUtil
 
 # Matplotlib
 import matplotlib as mpl
-mpl.use('Agg')
+mpl.use('pgf')
+pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
+mpl.rcParams.update(pgf_with_rc_fonts)
 import matplotlib.pyplot as plt
 plt.rc('text', usetex=True)
 plt.ioff()
@@ -240,7 +242,7 @@ def previewCoaddImage(img,
 
     # Save a PNG file
     if outPNG is None:
-        outPNG = prefix + '_pre.png'
+        outPNG = prefix + '_pre.pdf'
     plt.savefig(outPNG, dpi=70)
     plt.close(fig)
 
@@ -1097,7 +1099,7 @@ def coaddImageCutFull(root,
             cutFound = True
             # Save a preview image
             if visual:
-                pngOut = outPre + '_pre.png'
+                pngOut = outPre + '_pre.pdf'
                 if not imgOnly:
                     previewCoaddImage(
                         imgEmpty,
