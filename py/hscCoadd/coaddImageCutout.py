@@ -29,11 +29,9 @@ import hscUtils as hUtil
 
 # Matplotlib
 import matplotlib as mpl
-mpl.use('pgf')
-pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
-mpl.rcParams.update(pgf_with_rc_fonts)
+mpl.use('pdf')
 import matplotlib.pyplot as plt
-plt.rc('text', usetex=True)
+# plt.rc('text', usetex=True)
 plt.ioff()
 import matplotlib.patches as mpatches
 
