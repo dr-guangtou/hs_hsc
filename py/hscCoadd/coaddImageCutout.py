@@ -171,8 +171,8 @@ def previewCoaddImage(img,
 
     # Mask
     ax3 = plt.subplot(2, 2, 3)
-    ax3.imshow(det, cmap=plt.cm.gray, alpha=0.6, origin='lower')
-    ax3.imshow(msk, cmap=SEG_CMAP, alpha=0.9, origin='lower')
+    ax3.imshow(det, cmap=plt.cm.gray, alpha=0.8, origin='lower')
+    ax3.imshow(msk, cmap=SEG_CMAP, alpha=0.8, origin='lower')
 
     ax3.minorticks_on()
     ax3.xaxis.set_visible(False)
