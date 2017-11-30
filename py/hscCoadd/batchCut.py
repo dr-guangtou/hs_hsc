@@ -41,7 +41,8 @@ def run(args):
             decField=args.decField,
             clean=args.clean,
             njobs=args.njobs,
-            sample=args.sample)
+            sample=args.sample,
+            no_bright_object=args.no_bright_object)
     else:
         raise Exception("### Can not find the input catalog: %s" % args.incat)
 
@@ -149,6 +150,9 @@ if __name__ == '__main__':
         help='Number of jobs run at the same time',
         dest='njobs',
         default=1)
+    parser.add_argument(
+        '-nb', '--noBrightStar', action="store_true",
+        dest='no_bright_object', default=False)
     parser.add_argument(
         '--sample', dest='sample', help="Sample name", default=None)
 

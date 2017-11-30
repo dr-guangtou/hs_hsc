@@ -388,6 +388,7 @@ def singleCut(obj, butler, root, useful, config):
     noName = config['noName']
     imgOnly = config['imgOnly']
     allFilters = config['allFilters']
+    no_bright_object = config['no_bright_object']
 
     if verbose:
         print("### %d -- ID: %s ; " % ((obj + 1),
@@ -434,7 +435,8 @@ def singleCut(obj, butler, root, useful, config):
                     filt=filterUse,
                     prefix=filterPre,
                     butler=butler,
-                    imgOnly=imgOnly)
+                    imgOnly=imgOnly,
+                    no_bright_object=no_bright_object)
                 found, full, npatch = tempOut
             else:
                 tempOut = coaddImageCutFull(
@@ -448,7 +450,8 @@ def singleCut(obj, butler, root, useful, config):
                     filt=filterUse,
                     prefix=filterPre,
                     butler=butler,
-                    imgOnly=imgOnly)
+                    imgOnly=imgOnly,
+                    no_bright_object=no_bright_object)
                 found, full, npatch = tempOut
             if found:
                 matchStatus = 'Found'
@@ -502,7 +505,8 @@ def singleCut(obj, butler, root, useful, config):
                         filt=filterUse,
                         prefix=filterPre,
                         butler=butler,
-                        imgOnly=imgOnly)
+                        imgOnly=imgOnly,
+                        no_bright_object=no_bright_object)
                     found, full, npatch = tempOut
                 else:
                     tempOut = coaddImageCutFull(
@@ -516,7 +520,8 @@ def singleCut(obj, butler, root, useful, config):
                         filt=filterUse,
                         prefix=filterPre,
                         butler=butler,
-                        imgOnly=imgOnly)
+                        imgOnly=imgOnly,
+                        no_bright_object=no_bright_object)
                     found, full, npatch = tempOut
                 if found:
                     matchStatus = 'Found'
@@ -647,7 +652,8 @@ def coaddBatchCutFull(root,
                       njobs=1,
                       imgOnly=False,
                       allFilters=False,
-                      scaleBar=10.0):
+                      scaleBar=10.0,
+                      no_bright_object=False):
     """
     Generate HSC coadd cutout images.
 
@@ -708,7 +714,8 @@ def coaddBatchCutFull(root,
         'noName': noName,
         'imgOnly': imgOnly,
         'allFilters': allFilters,
-        'scaleBar': scaleBar
+        'scaleBar': scaleBar,
+        'no_bright_object': no_bright_object
     }
 
     if njobs > 1 and multiJob:
@@ -847,6 +854,9 @@ if __name__ == '__main__':
         help='Size of the scale bar in unit of arcsec',
         dest='scaleBar',
         default=10.0)
+    parser.add_argument(
+        '-nb', '--noBrightStar', action="store_true",
+        dest='no_bright_object', default=False)
     args = parser.parse_args()
 
     coaddBatchCutFull(
@@ -876,4 +886,5 @@ if __name__ == '__main__':
         imgOnly=args.imgOnly,
         allFilters=args.allFilters,
         njobs=args.njobs,
-        scaleBar=args.scaleBar)
+        scaleBar=args.scaleBar,
+        no_bright_object=args.no_bright_object)
