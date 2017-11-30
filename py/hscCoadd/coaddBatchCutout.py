@@ -210,7 +210,7 @@ def coaddBatchCutout(root,
             logPre = prefix + '_' + sample
         else:
             logPre = prefix
-        logFile = logPre + '_match_' + band.strip() + '.lis'
+        logFile = logPre + '_match_' + band.strip() + '.log'
         if not os.path.isfile(logFile):
             os.system('touch ' + logFile)
 
@@ -410,7 +410,7 @@ def singleCut(obj, butler, root, useful, config):
                     logPre = prefix + '_' + sample
                 else:
                     logPre = prefix
-                logFile = logPre + '_match_' + filterUse + '.lis'
+                logFile = logPre + '_match_' + filterUse + '.log'
                 if not os.path.isfile(logFile):
                     os.system('touch ' + logFile)
 
@@ -478,7 +478,7 @@ def singleCut(obj, butler, root, useful, config):
                         logPre = prefix + '_' + sample
                     else:
                         logPre = prefix
-                    logFilter = logPre + '_match_' + filterUse + '.lis'
+                    logFilter = logPre + '_match_' + filterUse + '.log'
                     if not os.path.isfile(logFilter):
                         os.system('touch ' + logFilter)
 
