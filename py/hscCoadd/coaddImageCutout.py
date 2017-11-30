@@ -2,6 +2,8 @@
 # encoding: utf-8
 """Generate HSC cutout image for galaxy."""
 
+from __future__ import (division, print_function)
+
 import os
 import copy
 import fcntl
@@ -339,8 +341,8 @@ def coaddImageCutout(root,
         try:
             butler = dafPersist.Butler(root)
             if verbose:
-                print SEP
-                print "## Load in the Butler"
+                print(SEP)
+                print("## Load in the Butler ...")
         except Exception:
             raise Exception("### Can not load the Butler")
     skyMap = butler.get("deepCoadd_skyMap", immediate=True)
@@ -353,9 +355,10 @@ def coaddImageCutout(root,
 
     # Verbose
     if verbose:
-        print SEP
-        print " Input Ra, Dec: %10.5f, %10.5f" % (ra, dec)
-        print " Cutout size is expected to be %d x %d" % (dimExpect, dimExpect)
+        print(SEP)
+        print(" Input Ra, Dec: %10.5f, %10.5f" % (ra, dec))
+        print(" Cutout size is expected to be %d x %d" % (dimExpect,
+                                                          dimExpect))
 
     # First, search for the central (Ra, Dec)
     # Define the Ra, Dec pair
@@ -370,7 +373,7 @@ def coaddImageCutout(root,
     for tt in range(nTract):
         nPatch += len(matches[tt][1])
     if verbose:
-        print "## Find %d possible matches !" % nPatch
+        print("## Find %d possible matches !" % nPatch)
 
     matchCen = []
     for tract, patch in matches:
@@ -379,8 +382,8 @@ def coaddImageCutout(root,
         tractId = tract.getId()
         patchId = "%d,%d" % patch[0].getIndex()
         if verbose:
-            print "## Choose (Tract, Patch) for center: %d, %s !" % (tractId,
-                                                                     patchId)
+            print("## Choose (Tract, Patch) for center: %d, %s !" % (tractId,
+                                                                     patchId))
         matchCen.append((tractId, patchId))
         # Get the coadd images
         # Try to load the coadd Exposure; the skymap covers larger area than
@@ -393,10 +396,10 @@ def coaddImageCutout(root,
                 filter=filt,
                 immediate=True)
         except Exception, errMsg:
-            print WAR
-            print " The desired coordinate is not available !!! "
-            print WAR
-            print errMsg
+            print(WAR)
+            print(" The desired coordinate is not available !!! ")
+            print(WAR)
+            print(errMsg)
             """ TODO """
             coaddFound = False
             noData = True
@@ -437,9 +440,9 @@ def coaddImageCutout(root,
                 if bbox.getArea() < sizeExpect:
                     partialCut = True
                     if verbose:
-                        print "## Cut out image dimension " + \
+                        print("## Cut out image dimension " +
                               "is : %d x %d " % (bbox.getWidth(),
-                                                 bbox.getHeight())
+                                                 bbox.getHeight()))
                 else:
                     partialCut = False
             # Make a new ExposureF object for the cutout region
@@ -524,7 +527,7 @@ def coaddImageCutout(root,
                     outSrc = outPre + '_src.fits'
                     srcMatch.writeFits(outSrc)
                 except Exception:
-                    print "### Tract: %d  Patch: %s" % (tractId, patchId)
+                    print("### Tract: %d  Patch: %s" % (tractId, patchId))
                     warnings.warn("### Can not find the *force catalog !")
                     noSrcFile = prefix + '_nosrc_' + filt + '.lis'
                     if not os.path.isfile(noSrcFile):
@@ -542,7 +545,7 @@ def coaddImageCutout(root,
     if partialCut and circleMatch:
 
         if verbose:
-            print "####### Search for other overlapped patches #######"
+            print("####### Search for other overlapped patches #######")
 
         # Return the list of RA, DEC that described a circle region around the
         # input (RA, DEC).  The radius is the input size in unit of arcsec
@@ -559,7 +562,7 @@ def coaddImageCutout(root,
         for tt in range(nTract):
             nPatch += len(matches[tt][1])
         if verbose:
-            print "### Find %d possible overlap patches" % nPatch
+            print("### Find %d possible overlap patches" % nPatch)
 
         for tract, patch in matches:
 
@@ -571,7 +574,7 @@ def coaddImageCutout(root,
                 # Skip the image that has been used
                 if (tractId, patchId) in matchCen:
                     if verbose:
-                        print "### %d - %s is used" % (tractId, patchId)
+                        print("### %d - %s is used" % (tractId, patchId))
                     continue
 
                 # Get the coadd images
@@ -588,11 +591,11 @@ def coaddImageCutout(root,
 
                 except Exception, errMsg:
 
-                    print "#############################################"
-                    print "              PARTIAL OVERLAP                "
-                    print " The desired coordinate is not available !!! "
-                    print "#############################################"
-                    print errMsg
+                    print("#############################################")
+                    print("              PARTIAL OVERLAP                ")
+                    print(" The desired coordinate is not available !!! ")
+                    print("#############################################")
+                    print(errMsg)
 
                 else:
                     # Get the WCS information
@@ -616,15 +619,15 @@ def coaddImageCutout(root,
                     elif bbox.getArea() < int(sizeExpect * 0.1):
                         # Ignore small overlapped image
                         if verbose:
-                            print WAR
-                            print "### %d-%s : small overlap" % (tractId,
-                                                                 patchId)
+                            print(WAR)
+                            print("### %d-%s : small overlap" % (tractId,
+                                                                 patchId))
                         continue
                     else:
                         if verbose:
-                            print WAR
-                            print "### Find one overlap: %d, %s" % (tractId,
-                                                                    patchId)
+                            print(WAR)
+                            print("### Find one overlap: %d, %s" % (tractId,
+                                                                    patchId))
 
                     # Make a new ExposureF object for the cutout region
                     subImage = afwImage.ExposureF(coadd, bbox, afwImage.PARENT)
@@ -700,17 +703,13 @@ def coaddImageCutFull(root,
     if butler is None:
         try:
             butler = dafPersist.Butler(root)
-            if verbose:
-                print SEP
-                print "## Load in the Butler"
         except Exception:
-            print WAR
-            print '## Can not load the correct Butler!'
+            print('## Can not load the correct Butler!')
+
     skyMap = butler.get("deepCoadd_skyMap", immediate=True)
 
     # Check the filter
     if not cdColor.isHscFilter(filt, short=False):
-        print WAR
         raise Exception("## Wrong Filter for HSC Data!")
 
     # (Ra, Dec) Pair for the center
@@ -729,9 +728,10 @@ def coaddImageCutFull(root,
 
     # Verbose
     if verbose:
-        print SEP
-        print " Input Ra, Dec: %10.5f, %10.5f" % (ra, dec)
-        print " Cutout size is expected to be %d x %d" % (dimExpect, dimExpect)
+        print(SEP)
+        print(" Input Ra, Dec: %10.5f, %10.5f" % (ra, dec))
+        print(" Cutout size is expected to be %d x %d" % (dimExpect,
+                                                          dimExpect))
 
     # Create empty arrays
     imgEmpty = np.empty((dimExpect, dimExpect), dtype="float")
@@ -752,7 +752,8 @@ def coaddImageCutFull(root,
     tractList, patchList = cdColor.getTractPatchList(matches)
     nPatch = len(patchList)
     if verbose:
-        print "### Will deal with %d patches" % nPatch
+        print("### Will deal with %d patches" % nPatch)
+
     # Prefix of the output file
     outPre = prefix + '_' + filt + '_full'
 
@@ -780,9 +781,8 @@ def coaddImageCutFull(root,
     for j in range(nPatch):
         # Tract, patch
         tract, patch = tractList[j], patchList[j]
-        print SEP
-        print "### Dealing with %d - %s" % (tract, patch)
-        print SEP
+        print("### Dealing with %d - %s" % (tract, patch))
+        print(SEP)
         # Check if the coordinate is available in all three bands.
         try:
             # Get the coadded exposure
@@ -793,10 +793,9 @@ def coaddImageCutFull(root,
                 filter=filt,
                 immediate=True)
         except Exception, errMsg:
-            print WAR
-            print " No data is available in %d - %s" % (tract, patch)
-            print "#########################################################"
-            print WAR
+            print(WAR)
+            print(" No data is available in %d - %s" % (tract, patch))
+            print(WAR)
         else:
             # Get the WCS information
             wcs = coadd.getWcs()
@@ -811,32 +810,7 @@ def coaddImageCutFull(root,
                 visitIn = coadd.getInfo().getCoaddInputs().visits
                 ccdIn = coadd.getInfo().getCoaddInputs().ccds
                 totalExpTime = 0.0
-                """ TODO: This part is not working....
-                totalExpTime = len(visitIn)
-                 TODO: This part seems to cause problem, turn it off XXX
-                expTimeVisits = set()
-                for k in range(len(visitIn) + 1):
-                    input = ccdIn[k]
-                    ccd   = input.get("ccd")
-                    visit = input.get("visit")
-                    singleBbox = input.getBBox()
-                    single = butler.get("calexp_sub", visit=int(visit),
-                                        ccd=ccd,
-                                        bbox=afwGeom.Box2I(afwGeom.Point2I(0,0),
-                                                           afwGeom.ExtentI(1,1)),
-                                    immediate=True)
-                    singleCalib = single.getCalib()
-                    singleWcs   = single.getWcs()
-                    singlePos   = singleWcs.skyToPixel(raDec)
-                    if not singleBbox.contains(afwGeom.Point2I(singlePos)):
-                        continue
-                    else:
-                        if visit not in expTimeVisits:
-                            totalExpTime += singleCalib.getExptime()
-                            expTimeVisits.add(visit)
-                if verbose:
-                    print "### The total exposure time is %5.1f" % totalExpTime
-                """
+
             # Convert the central coordinate from Ra,Dec to pixel unit
             pixel = wcs.skyToPixel(raDec)
             pixel = afwGeom.Point2I(pixel)
@@ -847,15 +821,16 @@ def coaddImageCutFull(root,
             xOri, yOri = bbox.getBegin()
             # Compare to the coadd image, and clip
             bbox.clip(coadd.getBBox(afwImage.PARENT))
+
             # Get the masked image
             try:
                 subImage = afwImage.ExposureF(coadd, bbox, afwImage.PARENT)
             except Exception:
-                print WAR
-                print '### SOMETHING IS WRONG WITH THIS BOUNDING BOX !!'
-                print "    %d -- %s -- %s " % (tract, patch, filt)
-                print "    Bounding Box Size: %d" % (
-                    bbox.getWidth() * bbox.getHeight())
+                print(WAR)
+                print('### SOMETHING IS WRONG WITH THIS BOUNDING BOX !!')
+                print("    %d -- %s -- %s " % (tract, patch, filt))
+                print("    Bounding Box Size: %d" % (
+                    bbox.getWidth() * bbox.getHeight()))
             else:
                 # Extract the image array
                 imgArr.append(subImage.getMaskedImage().getImage().getArray())
@@ -874,14 +849,13 @@ def coaddImageCutFull(root,
                     # Get the source catalog
                     if saveSrc:
                         noFootprint = afwTable.SOURCE_IO_NO_FOOTPRINTS
-                        print SEP
-                        print "### Search the source catalog...."
+                        print("### Search the source catalog....")
                         """
                         !!! Sometimes the forced photometry catalog
                             might not be available
                         """
                         try:
-                            print "    !!!! TRY deepCoadd_meas"
+                            print("    !!!! TRY deepCoadd_meas")
                             srcCat = butler.get(
                                 'deepCoadd_meas',
                                 tract=tract,
@@ -913,7 +887,7 @@ def coaddImageCutFull(root,
                             # Try other catalogs
                             # 1. Reference
                             try:
-                                print "    !!!! TRY deepCoadd_ref"
+                                print("    !!!! TRY deepCoadd_ref")
                                 refCat = butler.get(
                                     'deepCoadd_ref',
                                     tract=tract,
@@ -926,7 +900,7 @@ def coaddImageCutFull(root,
                                 warnings.warn('### No *ref catalog!')
                             # 2. Forced Photometry
                             try:
-                                print "    !!!! TRY deepCoadd_forced_src"
+                                print("    !!!! TRY deepCoadd_forced_src")
                                 forceCat = butler.get(
                                     'deepCoadd_forced_src',
                                     tract=tract,
@@ -938,8 +912,7 @@ def coaddImageCutFull(root,
                             except Exception:
                                 warnings.warn('### No *force catalog!')
                         except Exception:
-                            print WAR
-                            print "### Tract: %d  Patch: %s" % (tract, patch)
+                            print("### Tract: %d  Patch: %s" % (tract, patch))
                             warnings.warn("### No photometry catalog!")
                             noSrcFile = prefix + '_nosrc_' + filt + '.lis'
                             if not os.path.isfile(noSrcFile):
@@ -982,7 +955,7 @@ def coaddImageCutFull(root,
     # Number of returned images
     nReturn = len(newX)
     if nReturn > 0:
-        print "### Return %d Useful Images" % nReturn
+        print("### Return %d Useful Images" % nReturn)
         # Sort the returned images according to the size of their BBox
         indSize = np.argsort(boxSize)
 
@@ -1028,12 +1001,10 @@ def coaddImageCutFull(root,
         nanPix = np.sum(np.isnan(imgEmpty))
         if nanPix < (sizeExpect * 0.1):
             cutFull = True
-            if verbose:
-                print "## > 90% of the cutout region is covered!"
         else:
             cutFull = False
             if verbose:
-                print "## There are still %d NaN pixels!" % nanPix
+                print("## There are still %d NaN pixels!" % nanPix)
         if not imgOnly:
             # For mask images, replace NaN with a large value: 999
             mskEmpty[np.isnan(mskEmpty)] = 999
@@ -1058,8 +1029,8 @@ def coaddImageCutFull(root,
 
         # Define the output file name
         if verbose:
-            print SEP
-            print "### Generate Outputs"
+            print("\n### Generate Outputs")
+
         # Save the image array
         saveImageArr(imgEmpty, outHead, outPre + '_img.fits')
         if not imgOnly:
@@ -1083,8 +1054,6 @@ def coaddImageCutFull(root,
                 srcUse.writeFits(outPre + '_meas.fits')
                 refUse.writeFits(outPre + '_ref.fits')
                 forceUse.writeFits(outPre + '_forced.fits')
-            else:
-                print "### Can not find the useful source catalog !!"
 
         if nReturn > 0:
             cutFound = True
@@ -1104,12 +1073,12 @@ def coaddImageCutFull(root,
                         outPNG=pngOut)
         else:
             cutFound = False
-            print WAR
-            print "### No data was collected for " + \
-                  "this RA,DEC in %s band!" % filt
+            print(WAR)
+            print("### No data was collected for " +
+                  "this RA,DEC in %s band!" % filt)
     else:
-        print WAR
-        print "### No data was collected for this RA,DEC in %s band!" % filt
+        print(WAR)
+        print("### No data was collected for this RA,DEC in %s band!" % filt)
         cutFound = False
         cutFull = False
 
