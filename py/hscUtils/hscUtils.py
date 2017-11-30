@@ -29,6 +29,7 @@ except ImportError:
 import astropy.units as u
 from astropy.utils.misc import isiterable
 from astropy.coordinates import SkyCoord
+
 """ Path of the package"""
 __path__ = os.path.realpath(__file__)
 """ Path of the data directory"""
@@ -39,6 +40,8 @@ if not os.path.exists(__dataDir__):
 SIGMA1 = 0.3173
 SIGMA2 = 0.0455
 SIGMA3 = 0.0027
+
+
 """
 Angle related functions:
 
@@ -965,6 +968,13 @@ def check_random_state(seed):
         return seed
     raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
                      ' instance' % seed)
+
+
+# About the Colormaps
+SEG_CMAP = random_cmap(ncolors=512,
+                       background_color=u'white')
+SEG_CMAP.set_bad(color='white')
+SEG_CMAP.set_under(color='white')
 
 
 """
