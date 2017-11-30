@@ -29,7 +29,7 @@ import hscUtils as hUtil
 
 # Matplotlib
 import matplotlib as mpl
-mpl.use('pdf')
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 # plt.rc('text', usetex=True)
 plt.ioff()
@@ -129,8 +129,8 @@ def previewCoaddImage(img,
     scale_bar_y = int(img_size_y * 0.10)
     scale_bar_text_x = (scale_bar_x_0 + scale_bar_x_1) / 2
     scale_bar_text_y = (scale_bar_y * 0.50)
-    scale_bar_text = r'$20^{\prime\prime}$'
-    scale_bar_text_size = 20
+    scale_bar_text = '20 arcsec$'
+    scale_bar_text_size = 13
 
     ax1.plot([scale_bar_x_0, scale_bar_x_1], [scale_bar_y, scale_bar_y],
              linewidth=3, c='w', alpha=1.0)
@@ -171,9 +171,8 @@ def previewCoaddImage(img,
 
     # Mask
     ax3 = plt.subplot(2, 2, 3)
-    ax3.imshow((msk * 2) + det,
-               cmap=SEG_CMAP,
-               origin='lower')
+    ax3.imshow(det, cmap=SEG_CMAP, alpha=0.4, origin='lower')
+    ax3.imshow(msk, cmap=SEG_CMAP, origin='lower')
 
     ax3.minorticks_on()
     ax3.xaxis.set_visible(False)
@@ -186,7 +185,7 @@ def previewCoaddImage(img,
         fontweight='bold',
         ha='center',
         va='center',
-        color='w',
+        color='k',
         transform=ax3.transAxes)
 
     # If necessary, outline the BBox of each overlapped Patch
@@ -240,7 +239,7 @@ def previewCoaddImage(img,
 
     # Save a PNG file
     if outPNG is None:
-        outPNG = prefix + '_pre.pdf'
+        outPNG = prefix + '_pre.png'
     plt.savefig(outPNG, dpi=70)
     plt.close(fig)
 
@@ -1097,7 +1096,7 @@ def coaddImageCutFull(root,
             cutFound = True
             # Save a preview image
             if visual:
-                pngOut = outPre + '_pre.pdf'
+                pngOut = outPre + '_pre.png'
                 if not imgOnly:
                     previewCoaddImage(
                         imgEmpty,
