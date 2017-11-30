@@ -293,8 +293,10 @@ def getSEPSky(imgArr,
         subBin = hUtil.congrid(imgSub, (dimBinX, dimBinY), method='nearest')
         mskBin = hUtil.congrid(mskArr, (dimBinX, dimBinY), method='neighbour')
     except Exception:
-        print WAR
         warnings.warn("congrid fails!")
+        print WAR
+        print "# Image rebin is failed for this galaxy !!!"
+        print WAR
         imgBin = imgArr
         subBin = imgSub
         mskBin = mskArr
@@ -374,8 +376,10 @@ def getGlobalSky(imgArr,
         imgBin = hUtil.congrid(imgArr, (dimBinX, dimBinY), method='nearest')
         mskBin = hUtil.congrid(mskAll, (dimBinX, dimBinY), method='neighbour')
     except Exception:
-        print WAR
         warnings.warn('### congrid failed!')
+        print WAR
+        print "# Image rebin is failed for this galaxy !!!"
+        print WAR
         imgBin = imgArr
         mskBin = mskAll
 
