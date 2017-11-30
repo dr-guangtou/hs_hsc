@@ -10,7 +10,8 @@ Collection of useful tools .
 
 """
 
-from __future__ import (absolute_import, division, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import os
 import sys
 import numbers
@@ -365,9 +366,9 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
     old = np.array(a.shape)
     ndims = len(a.shape)
     if len(newdims) != ndims:
-        print "[congrid] dimensions error. " \
-              "This routine currently only support " \
-              "rebinning to the same number of dimensions."
+        print("[congrid] dimensions error. ",
+              "This routine currently only support ",
+              "rebinning to the same number of dimensions.")
         return None
     newdims = np.asarray(newdims, dtype=int)
     dimlist = []
@@ -425,9 +426,9 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
         newa = scipy.ndimage.map_coordinates(a, newcoords)
         return newa
     else:
-        print "Congrid error: Unrecognized interpolation type.\n", \
-              "Currently only \'neighbour\', \'nearest\',\'linear\',", \
-              "and \'spline\' are supported."
+        print("Congrid error: Unrecognized interpolation type.\n",
+              "Currently only \'neighbour\', \'nearest\',\'linear\',",
+              "and \'spline\' are supported.")
         return None
 
 
@@ -1130,7 +1131,8 @@ def songPlotSetup(ax,
 """
 
 
-def removeIsNullCol(cat, output=None, catHdu=1, string='isnull'):
+def removeIsNullCol(cat, output=None, catHdu=1, string='isnull',
+                    verbose=True):
     """Remove the xxx_isnull columns from the catalog."""
     from astropy.table import Table
     if not os.path.isfile(cat):
@@ -1140,7 +1142,8 @@ def removeIsNullCol(cat, output=None, catHdu=1, string='isnull'):
         output = cat.replace('.fits', '_clean.fits')
 
     data = Table.read(cat, format='fits')
-    print "Reading the data"
+    if verbose:
+        print("Reading the data ...")
     colnames = data.colnames
 
     colRemove = [col for col in colnames if string in col]
@@ -1149,4 +1152,5 @@ def removeIsNullCol(cat, output=None, catHdu=1, string='isnull'):
 
     data.write(output, format='fits', overwrite=True)
 
-    print "Saving new data"
+    if verbose:
+        print("Saving new data ...")
