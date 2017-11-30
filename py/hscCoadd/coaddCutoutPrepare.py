@@ -161,14 +161,14 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
 
     Parameters:
     """
-    fontsize = 18
+    fontsize = 13
     # Choice of radius to plot
     if rad is not None:
         r = rad
     else:
         r = objs['a']
     # Set up the plot
-    fig, axes = plt.subplots(2, 2, figsize=(14, 14))
+    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
     fig.subplots_adjust(hspace=0.20, wspace=0.20,
                         left=0.08, bottom=0.06,
                         top=0.98, right=0.98)
@@ -282,7 +282,7 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
         for tick in ax.yaxis.get_major_ticks():
             tick.label1.set_fontsize(fontsize)
     # Save the figure
-    fig.savefig(outPNG, dpi=80)
+    fig.savefig(outPNG, dpi=70)
     plt.close(fig)
 
 
@@ -299,10 +299,10 @@ def showSEPImage(image, contrast=0.2, size=10, cmap=cmap1,
     """
     fig = plt.figure(figsize=(size, size))
     fig.subplots_adjust(hspace=0.0, wspace=0.0,
-                        bottom=0.08, left=0.08,
+                        bottom=0.10, left=0.11,
                         top=0.92, right=0.98)
     ax = fig.add_axes([0.000, 0.002, 0.996, 0.996])
-    fontsize = 16
+    fontsize = 12
     ax.minorticks_on()
 
     for tick in ax.xaxis.get_major_ticks():
@@ -310,7 +310,7 @@ def showSEPImage(image, contrast=0.2, size=10, cmap=cmap1,
     for tick in ax.yaxis.get_major_ticks():
         tick.label1.set_fontsize(fontsize)
 
-    ax.set_title(title, fontsize=28, fontweight='bold', color='r')
+    ax.set_title(title, fontsize=16, fontweight='bold', color='r')
     if not titleInside:
         ax.title.set_position((0.5, 1.01))
     else:
@@ -381,7 +381,7 @@ def showSEPImage(image, contrast=0.2, size=10, cmap=cmap1,
         ell3.set_linewidth(2.5)
         ell3.set_linestyle('dashed')
 
-    fig.savefig(pngName, dpi=80)
+    fig.savefig(pngName, dpi=70)
     plt.close(fig)
 
 
