@@ -485,7 +485,7 @@ def saveSEPObjects(objs, prefix='sep_objects', csv=False,
         objList2Reg(objs, regName=regFile, color=color)
         if os.path.isfile(regFile):
             if verbose:
-                print "\n###     Save object list to .reg file: %s" % regFile
+                print("\n###     Save object list to .reg file: %s" % regFile)
         else:
             raise Exception("### Something is wrong with the .reg file")
 

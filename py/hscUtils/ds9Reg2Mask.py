@@ -10,12 +10,6 @@ import numpy as np
 import argparse
 
 from astropy.io import fits
-import cubehelix
-# For high-contrast image
-cmap1 = cubehelix.cmap(start=0.5, rot=-0.8, gamma=1.0,
-                       minSat=1.2, maxSat=1.2,
-                       minLight=0.0, maxLight=1.0)
-cmap1.set_bad('k', 1.)
 
 # import coaddCutoutPrepare as ccp
 # Matplotlib related
@@ -33,6 +27,10 @@ mpl.rcParams['ytick.minor.width'] = 1.5
 mpl.rc('axes', linewidth=2)
 import matplotlib.pyplot as plt
 plt.ioff()
+
+# For image
+cmap1 = plt.get_cmap('viridis')
+cmap1.set_bad('k', 1.)
 
 
 def zscale(img, contrast=0.25, samples=500):
