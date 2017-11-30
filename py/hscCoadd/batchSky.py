@@ -2,6 +2,8 @@
 # encoding: utf-8
 """Estimate background for HSC cutouts."""
 
+from __future__ import (division, print_function)
+
 import os
 import glob
 import fcntl
@@ -42,7 +44,7 @@ def run(args):
         if not os.path.isfile(logFile):
             os.system('touch ' + logFile)
         if args.verbose:
-            print "## Will deal with %d galaxies ! " % len(data)
+            print("\n## Will deal with %d galaxies ! " % len(data))
 
         for galaxy in data:
             """ Galaxy ID and prefix """
@@ -52,7 +54,7 @@ def run(args):
             galRoot = os.path.join(galID, filter)
             if not os.path.isdir(galRoot):
                 if args.verbose:
-                    print('### Cannot find the folder: %s !' % galRoot)
+                    print('\n### Cannot find the folder: %s !' % galRoot)
                 with open(logFile, "a") as logMatch:
                     try:
                         logFormat = "%25s  %5s NDIR  %6.1f  %7.4f  %7.4f" + \
@@ -98,14 +100,14 @@ def run(args):
             if args.maskFilter is not None:
                 mskFilter = (args.maskFilter).strip().upper()
                 if args.verbose:
-                    print "###  Use %s filter for mask \n" % mskFilter
+                    print("\n###  Use %s filter for mask \n" % mskFilter)
                 mskPrefix = (prefix + '_' + galID + '_' + mskFilter + '_full')
                 mskRoot = os.path.join(galID, mskFilter, rerun)
                 galMsk = os.path.join(mskRoot, mskPrefix + '_mskall.fits')
                 if not os.path.isfile(galMsk):
                     if args.verbose:
                         print(
-                            '### Can not find the final mask : %s !' % galMsk)
+                            '\n### Can not find final mask : %s !' % galMsk)
                     with open(logFile, "a") as logMatch:
                         try:
                             logFormat = "%25s  %5s NMSK  %6.1f  %7.4f  " + \
@@ -148,9 +150,8 @@ def run(args):
                     except IOError:
                         pass
             except Exception, errMsg:
-                print WAR
-                print str(errMsg)
-                print WAR
+                print(WAR)
+                print(str(errMsg))
                 warnings.warn('### The sky estimate is failed ' +
                               'for %s in %s' % (galID, filter))
                 logging.warning('### The sky estimate is failed ' +
