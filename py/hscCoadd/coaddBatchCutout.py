@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Generate HSC full cutout in batch mode."""
 
+from __future__ import (division, print_function)
+
 import os
 import fcntl
 import numpy
@@ -117,8 +119,7 @@ def parseInputCatalog(input,
         try:
             info2 = cat.field(infoField1)
         except KeyError:
-            print WAR
-            print "### Can not find field: %s in the catalog !" % infoField1
+            print("\n### Can not find field: %s in the catalog !" % infoField1)
             info2 = None
         else:
             if isinstance(info2[0], (float, int, numpy.number)):
@@ -131,8 +132,7 @@ def parseInputCatalog(input,
         try:
             info3 = cat.field(infoField2)
         except KeyError:
-            print WAR
-            print "### Can not find field: %s in the catalog !" % infoField2
+            print("\n### Can not find field: %s in the catalog !" % infoField2)
             info3 = None
         else:
             if isinstance(info3[0], (float, int, numpy.number)):
@@ -216,15 +216,15 @@ def coaddBatchCutout(root,
 
     nObjs = len(index)
     if verbose:
-        print SEP
-        print "### Will try to get cutout image for %d objects" % nObjs
-        print SEP
+        print("\n### Will try to get cutout image for %d objects" % nObjs)
 
     for i in range(nObjs):
 
         if verbose:
-            print "### %d -- ID: %s ; " % (i+1, str(index[i])) + \
-                  "RA: %10.5f DEC %10.5f ; Size: %d" % (ra[i], dec[i], size[i])
+            print("### %d -- ID: %s ; " % (i+1, str(index[i])) +
+                  "RA: %10.5f DEC %10.5f ; Size: %d" % (ra[i],
+                                                        dec[i],
+                                                        size[i]))
 
         # New prefix
         newPrefix = prefix + '_' + str(index[i]).strip()
@@ -391,17 +391,17 @@ def singleCut(obj, butler, root, useful, config):
     allFilters = config['allFilters']
 
     if verbose:
-        print "### %d -- ID: %s ; " % ((obj + 1),
-                                       str(index[obj])) + \
+        print("### %d -- ID: %s ; " % ((obj + 1),
+                                       str(index[obj])) +
               "RA: %10.5f DEC %10.5f ; Size: %d" % (ra[obj],
                                                     dec[obj],
-                                                    size[obj])
+                                                    size[obj]))
     # New prefix
     newPrefix = prefix + '_' + str(index[obj]).strip()
     # Cutout Image
     if not onlyColor:
         if verbose:
-            print "### Make the Cutout Fits Files!  "
+            print("\n### Make the Cutout Fits Files!  ")
         if not allFilters:
             filterUse = band.strip()
 
@@ -471,7 +471,7 @@ def singleCut(obj, butler, root, useful, config):
                     pass
         else:
             for filterUse in HSC_FILTERS:
-                print "## Working on %s now" % filterUse
+                print("\n## Working on %s now" % filterUse)
 
                 if not onlyColor:
                     if sample is not None:
@@ -560,7 +560,7 @@ def singleCut(obj, butler, root, useful, config):
         else:
             name = str(index[obj])
         if verbose:
-            print "### Generate Color Image !"
+            print("\n### Generate Color Image !")
         if clean:
             coaddColourImageFull(
                 root,
@@ -601,7 +601,7 @@ def singleCut(obj, butler, root, useful, config):
         else:
             name = str(index[obj])
         if verbose:
-            print "### Generate Color Image !"
+            print("\n### Generate Color Image !")
         coaddColourImageFull(
             root,
             ra[obj],
@@ -667,9 +667,8 @@ def coaddBatchCutFull(root,
 
     if os.path.exists(inCat):
         if verbose:
-            print COM
-            print "              PARSE THE INPUT CATALOG                 "
-            print COM
+            print(COM)
+            print("              PARSE THE INPUT CATALOG                 \n")
         useful, nObjs = parseInputCatalog(
             inCat,
             sizeDefault=size,
@@ -686,9 +685,7 @@ def coaddBatchCutFull(root,
         raise Exception("### Can not find the input catalog: %s" % inCat)
 
     if verbose:
-        print SEP
-        print "### Will try to get cutout image for %d objects" % nObjs
-        print SEP
+        print("\n### Will try to get cutout image for %d objects" % nObjs)
     indexObj = numpy.asarray(range(nObjs))
 
     config = {
