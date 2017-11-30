@@ -369,7 +369,7 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
               "This routine currently only support " \
               "rebinning to the same number of dimensions."
         return None
-    newdims = np.asarray(newdims, dtype=float)
+    newdims = np.asarray(newdims, dtype=int)
     dimlist = []
 
     if method == 'neighbour':
