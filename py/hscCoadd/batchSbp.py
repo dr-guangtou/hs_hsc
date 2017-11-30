@@ -281,7 +281,7 @@ if __name__ == '__main__':
                         type=float, default=2.5)
     parser.add_argument('--lowClip', dest='lowClip',
                         help='Lower limit for clipping',
-                        type=float, default=2.7)
+                        type=float, default=3.0)
     parser.add_argument('--nClip', dest='nClip',
                         help='Upper limit for clipping',
                         type=int, default=3)
