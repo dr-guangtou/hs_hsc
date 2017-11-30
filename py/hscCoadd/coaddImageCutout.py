@@ -7,7 +7,6 @@ import copy
 import fcntl
 import argparse
 import warnings
-from distutils.version import StrictVersion
 
 # HSC Pipeline
 import lsst.daf.persistence as dafPersist
@@ -325,11 +324,16 @@ def coaddImageCutout(root,
                      extraValue1=None,
                      butler=None):
     """Cutout coadd image around a RA, DEC."""
-    pipeVersion = dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
-    if StrictVersion(pipeVersion) >= StrictVersion('3.9.0'):
-        coaddData = "deepCoadd_calexp"
-    else:
-        coaddData = "deepCoadd"
+    # No longer support hscPipe < 4
+    coaddData = "deepCoadd_calexp"
+
+    # See if we are using hscPipe > 5
+    try:
+        dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
+        hscPipe5 = False
+    except AttributeError:
+        hscPipe5 = True
+
     # Get the SkyMap of the database
     if butler is None:
         try:
@@ -681,15 +685,16 @@ def coaddImageCutFull(root,
                       visual=True,
                       imgOnly=False):
     """Get the cutout around a location."""
-    # Deal with the Pipeline Version
-    pipeVersion = dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
-    print "### hscPipe Version: %s" % pipeVersion
-    if StrictVersion(pipeVersion) >= StrictVersion('3.9.0'):
-        coaddData = "deepCoadd_calexp"
-        pipeNew = True
-    else:
-        coaddData = "deepCoadd"
-        pipeNew = False
+    # No longer support hscPipe < 4
+    coaddData = "deepCoadd_calexp"
+    pipeNew = True
+
+    # See if we are using hscPipe > 5
+    try:
+        dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
+        hscPipe5 = False
+    except AttributeError:
+        hscPipe5 = True
 
     # Get the SkyMap of the database
     if butler is None:

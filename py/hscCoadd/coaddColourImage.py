@@ -5,7 +5,6 @@ from __future__ import division
 
 import argparse
 import numpy as np
-from distutils.version import StrictVersion
 
 import lsst.daf.persistence as dafPersist
 import lsst.afw.display.rgb as afwRgb
@@ -178,11 +177,15 @@ def coaddColourImage(root,
                      scaleBar=10,
                      butler=None):
     """Generate colored picture for cutout."""
-    pipeVersion = dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
-    if StrictVersion(pipeVersion) >= StrictVersion('3.9.0'):
-        coaddData = "deepCoadd_calexp"
-    else:
-        coaddData = "deepCoadd"
+    # No longer support hscPipe < 4
+    coaddData = "deepCoadd_calexp"
+
+    # See if we are using hscPipe > 5
+    try:
+        dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
+        hscPipe5 = False
+    except AttributeError:
+        hscPipe5 = True
 
     # Get the SkyMap of the database
     if butler is None:
@@ -394,11 +397,15 @@ def coaddColourImageFull(root,
                          butler=None,
                          verbose=False):
     """General full colored picture of cutout."""
-    pipeVersion = dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
-    if StrictVersion(pipeVersion) >= StrictVersion('3.9.0'):
-        coaddData = "deepCoadd_calexp"
-    else:
-        coaddData = "deepCoadd"
+    # No longer support hscPipe < 4
+    coaddData = "deepCoadd_calexp"
+
+    # See if we are using hscPipe > 5
+    try:
+        dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
+        hscPipe5 = False
+    except AttributeError:
+        hscPipe5 = True
 
     # Get the SkyMap of the database
     if butler is None:
