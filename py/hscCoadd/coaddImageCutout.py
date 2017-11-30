@@ -262,7 +262,24 @@ def getCoaddPsfImage(calExp, coord):
 
 
 def getCoaddMskPlane(calExp, bitmask):
-    """Get the mask plane of the coadd."""
+    """Get the mask plane of the coadd.
+
+    These are the hscPipe 5.4 bitmasks:
+        Plane 0 -> BAD
+        Plane 1 -> SAT
+        Plane 2 -> INTRP
+        Plane 3 -> CR
+        Plane 4 -> EDGE
+        Plane 5 -> DETECTED
+        Plane 6 -> DETECTED_NEGATIVE
+        Plane 7 -> SUSPECT
+        Plane 8 -> NO_DATA
+        Plane 9 -> BRIGHT_OBJECT
+        Plane 10 -> CLIPPED
+        Plane 11 -> CROSSTALK
+        Plane 12 -> NOT_DEBLENDED
+        Plane 13 -> UNMASKEDNAN
+    """
     # Get the mask image
     mskImg = calExp.getMaskedImage().getMask()
     newMsk = copy.deepcopy(mskImg)
@@ -276,39 +293,39 @@ def getCoaddMskPlane(calExp, bitmask):
     return newMsk
 
 
-def getCoaddBadMsk(calExp, pipeNew=False):
+def getCoaddBadMsk(calExp, no_bright_object=False):
     """Get the BAD mask plane."""
     mskImg = calExp.getMaskedImage().getMask()
 
     badMsk = copy.deepcopy(mskImg)
     # Clear the "DETECTED" plane
     badMsk.removeAndClearMaskPlane('DETECTED', True)
-    try:
-        # Clear the "EDGE" plane
-        badMsk.removeAndClearMaskPlane('EDGE', True)
-    except Exception:
-        pass
+
     try:
         # Clear the "DETECTED_NEGATIVE" plane
         badMsk.removeAndClearMaskPlane('DETECTED_NEGATIVE', True)
     except Exception:
         pass
+
     try:
         # Clear the "CLIPPED" plane
         badMsk.removeAndClearMaskPlane('CLIPPED', True)
     except Exception:
         pass
+
     try:
         # Clear the "CROSSTALK" plane
         badMsk.removeAndClearMaskPlane('CROSSTALK', True)
     except Exception:
         pass
-    if pipeNew:
-        try:
-            # Clear the "NOT_DEBLENDED" plane
-            badMsk.removeAndClearMaskPlane('NOT_DEBLENDED', True)
-        except Exception:
-            pass
+
+    try:
+        # Clear the "NOT_DEBLENDED" plane
+        badMsk.removeAndClearMaskPlane('NOT_DEBLENDED', True)
+    except Exception:
+        pass
+
+    if no_bright_object:
         try:
             # Clear the "BRIGHT_OBJECT" plane
             badMsk.removeAndClearMaskPlane('BRIGHT_OBJECT', True)
@@ -348,7 +365,8 @@ def coaddImageCutout(root,
                      verbose=True,
                      extraField1=None,
                      extraValue1=None,
-                     butler=None):
+                     butler=None,
+                     no_bright_object=False):
     """Cutout coadd image around a RA, DEC."""
     # No longer support hscPipe < 4
     coaddData = "deepCoadd_calexp"
@@ -509,15 +527,9 @@ def coaddImageCutout(root,
             # Save the PSF image
             psfImg.writeFits(outPsf)
             if saveMsk is True:
-                # Get different mask planes
-                mskDetec = getCoaddMskPlane(subImage, 'DETECTED')
-                mskIntrp = getCoaddMskPlane(subImage, 'INTRP')
-                mskSatur = getCoaddMskPlane(subImage, 'SAT')
-                mskDetec.writeFits(outPre + '_detec.fits')
-                mskIntrp.writeFits(outPre + '_intrp.fits')
-                mskSatur.writeFits(outPre + '_satur.fits')
                 # Get the "Bad" mask plane
-                mskBad = getCoaddBadMsk(subImage)
+                mskBad = getCoaddBadMsk(subImage,
+                                        no_bright_object=no_bright_object)
                 mskBad.writeFits(outPre + '_bad.fits')
 
             if saveSrc is True:
@@ -710,11 +722,11 @@ def coaddImageCutFull(root,
                       extraValue1=None,
                       butler=None,
                       visual=True,
-                      imgOnly=False):
+                      imgOnly=False,
+                      no_bright_object=False):
     """Get the cutout around a location."""
     # No longer support hscPipe < 4
     coaddData = "deepCoadd_calexp"
-    pipeNew = True
 
     # See if we are using hscPipe > 5
     try:
@@ -863,12 +875,14 @@ def coaddImageCutFull(root,
                     # Extract the detect mask array
                     mskDet = getCoaddMskPlane(subImage, 'DETECTED')
                     detArr.append(mskDet.getArray())
+
                     # Extract the variance array
                     imgVar = subImage.getMaskedImage().getVariance().getArray()
                     varArr.append(imgVar)
 
                     # Extract the bad mask array
-                    mskBad = getCoaddBadMsk(subImage, pipeNew=pipeNew)
+                    mskBad = getCoaddBadMsk(subImage,
+                                            no_bright_object=no_bright_object)
                     mskArr.append(mskBad.getArray())
                     # Get the source catalog
                     if saveSrc:
@@ -1125,7 +1139,11 @@ if __name__ == '__main__':
         help='Prefix of the output file',
         default='hsc_coadd_cutout')
     parser.add_argument(
-        '-i', '--imgOnly', action="store_true", dest='imgOnly', default=False)
+        '-i', '--imgOnly', action="store_true",
+        dest='imgOnly', default=False)
+    parser.add_argument(
+        '-b', '--noBrightStar', action="store_true",
+        dest='no_bright_object', default=False)
     args = parser.parse_args()
 
     coaddImageCutFull(
@@ -1135,4 +1153,5 @@ if __name__ == '__main__':
         args.size,
         filt=args.filt,
         prefix=args.outfile,
-        imgOnly=args.imgOnly)
+        imgOnly=args.imgOnly,
+        no_bright_object=args.no_bright_object)
