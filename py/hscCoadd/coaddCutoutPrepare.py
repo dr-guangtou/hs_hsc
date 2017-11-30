@@ -50,12 +50,6 @@ if StrictVersion(sepVersion) < StrictVersion('0.5.0'):
 # For image
 cmap1 = plt.get_cmap('viridis')
 cmap1.set_bad('k', 1.)
-# For Mask
-cmap2 = plt.get_cmap('tab20b')
-# For Sigma
-cmap3 = plt.get_cmap('viridis')
-cmap3.set_bad('k', 1.)
-
 
 COM = '#' * 100
 SEP = '-' * 100
