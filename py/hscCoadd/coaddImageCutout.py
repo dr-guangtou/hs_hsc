@@ -1007,10 +1007,12 @@ def coaddImageCutFull(root,
         # Go through the returned images, put them in the cutout region
         for n in range(nReturn):
             ind = indSize[n]
+
             # Put in the image array
             imgUse = imgArr[ind]
             imgEmpty[newY[ind]:(newY[ind] + boxY[ind]), newX[ind]:(
                 newX[ind] + boxX[ind])] = imgUse[:, :]
+
             # Put in the mask array
             if not imgOnly:
                 mskUse = mskArr[ind]
@@ -1022,26 +1024,27 @@ def coaddImageCutFull(root,
                     newX[ind] + boxX[ind])] = varUse[:, :]
                 # Convert it into sigma array
                 sigEmpty = np.sqrt(varEmpty)
+
                 # Put in the detection mask array
                 detUse = detArr[ind]
                 detEmpty[newY[ind]:(newY[ind] + boxY[ind]), newX[ind]:(
                     newX[ind] + boxX[ind])] = detUse[:, :]
+
+                # Save the PSF image
+                psfOut = outPre + '_psf.fits'
+                if ((psfArr[ind] is not None) and
+                    (not os.path.isfile(psfOut))):
+                    psfUse = psfArr[ind]
+                    psfUse.writeFits(psfOut)
+
             if n is (nReturn - 1):
                 # This is the largest available sub-image
                 phoZp = zpList[ind]
-                # Save the psf image if necessary
-                if not imgOnly:
-                    if savePsf:
-                        psfOut = outPre + '_psf.fits'
-                        if psfArr[ind] is not None:
-                            psfUse = psfArr[ind]
-                            psfUse.writeFits(psfOut)
-                            noPsf = False
-                        else:
-                            warnings.warn("## Can not compute PSF image !!")
-                            noPsf = True
-                else:
-                    noPsf = True
+
+        # Check if PSF is available
+        if not os.path.isfile(psfOut):
+            warnings.warn("!!! Can not generate PSF for %s" % prefix)
+
         # See if all the cutout region is covered by data
         nanPix = np.sum(np.isnan(imgEmpty))
         if nanPix < (sizeExpect * 0.1):
