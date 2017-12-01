@@ -12,6 +12,7 @@ import warnings
 
 from astropy.io import fits
 
+import hscUtils as hUtil
 import coaddCutoutPrepare as ccp
 
 WAR = '!' * 100
@@ -24,14 +25,20 @@ def run(args):
     Parameters:
     """
     if os.path.isfile(args.incat):
-        """ Basic information """
+        # Basic information
         data = fits.open(args.incat)[1].data
         idx = (args.id)
         rerun = (args.rerun).strip()
         prefix = (args.prefix).strip()
         filt = (args.filter).strip().upper()
 
-        """ Keep a log """
+        # Bright star catalog
+        if args.brightStar:
+            starCat = hUtil.getStarCatalog()
+        else:
+            starCat = None
+
+        # Keep a log
         if args.sample is not None:
             logPre = prefix + '_' + args.sample
         else:
@@ -40,17 +47,18 @@ def run(args):
         if not os.path.isfile(logFile):
             os.system('touch ' + logFile)
 
+        # Start the loop
         if args.verbose:
             print("\n## Will deal with %d galaxies ! " % len(data))
 
         for galaxy in data:
-            """ Galaxy ID and prefix """
+            # Galaxy ID and prefix
             galID = str(galaxy[idx]).strip()
             galPrefix = prefix + '_' + galID + '_' + filt + '_full'
             if args.verbose:
                 print("\n## Will Deal with %s now ! " % galID)
 
-            """Folder for the data"""
+            # Folder for the data
             galRoot = os.path.join(galID, filt)
             if not os.path.isdir(galRoot):
                 warnings.warn('### Cannot find folder %s' % galRoot)
@@ -63,7 +71,7 @@ def run(args):
                         pass
                 continue
 
-            """Image"""
+            # Image
             galImg = galPrefix + '_img.fits'
             if not os.path.isfile(os.path.join(galRoot, galImg)):
                 warnings.warn('### Cannot find image %s' % galImg)
@@ -109,6 +117,7 @@ def run(args):
                         noBkgH=False,
                         combBad=True,
                         combDet=True,
+                        brightStar=starCat,
                         multiMask=args.multiMask)
                     with open(logFile, "a") as logMatch:
                         logStr = "%25s  %10s  DONE \n"
@@ -149,6 +158,7 @@ def run(args):
                         debConC=0.0025,
                         combBad=True,
                         combDet=True,
+                        brightStar=starCat,
                         multiMask=False)
                     with open(logFile, "a") as logMatch:
                         logStr = "%25s  %10s  DONE \n"
@@ -189,6 +199,7 @@ def run(args):
                         debConC=0.0025,
                         combBad=True,
                         combDet=True,
+                        brightStar=starCat,
                         multiMask=False)
                     with open(logFile, "a") as logMatch:
                         logStr = "%25s  %10s  DONE \n"
@@ -224,6 +235,7 @@ def run(args):
                         debConC=args.debConC,
                         combBad=args.combBad,
                         combDet=args.combDet,
+                        brightStar=starCat,
                         multiMask=args.multiMask)
                     with open(logFile, "a") as logMatch:
                         logStr = "%25s  %10s  DONE \n"
@@ -233,12 +245,11 @@ def run(args):
                         except IOError:
                             pass
             except Exception, errMsg:
-                print(WAR)
-                print(str(errMsg))
-                warnings.warn('### The preparation is failed for %s in %s' %
+                warnings.warn('\n### The preparation is failed for %s in %s' %
                               (galPrefix, filt))
                 logging.warning('### The preparation is failed for %s in %s' %
                                 (galPrefix, filt))
+                print(str(errMsg))
                 with open(logFile, "a") as logMatch:
                     logStr = "%25s  %10s  FAIL \n"
                     try:
@@ -247,7 +258,7 @@ def run(args):
                     except IOError:
                         pass
     else:
-        raise Exception("### Can not find the input catalog: %s" % args.incat)
+        raise Exception("\n### Can not find the input catalog: %s" % args.incat)
 
 
 if __name__ == '__main__':
@@ -422,6 +433,9 @@ if __name__ == '__main__':
         '--combBad', dest='combBad', action="store_true", default=False)
     parser.add_argument(
         '--combDet', dest='combDet', action="store_true", default=False)
+    parser.add_argument(
+        '--brightStar', dest='brightStar', action="store_true", default=False)
+
     args = parser.parse_args()
 
     run(args)
