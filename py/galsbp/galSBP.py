@@ -41,6 +41,9 @@ from astropy.io import ascii
 from astropy.table import Table, Column
 from pyraf import iraf
 
+# Personal
+import hscUtils as hUtil
+
 # Color table
 try:
     cmap = plt.get_cmap('viridis')
@@ -49,9 +52,6 @@ except Exception:
     from palettable.cubehelix import perceptual_rainbow_16
     cmap = perceptual_rainbow_16.mpl_colormap
     cmap.set_bad('k', 1.)
-
-# Personal
-import hscUtils as hUtil
 
 COM = '#' * 100
 SEP = '-' * 100
@@ -709,7 +709,7 @@ def ellipseGetAvgCen(ellipseOut, outRad, minSma=2.0):
     return avgCenX, avgCenY
 
 
-def ellipseGetAvgGeometry(ellipseOut, outRad, minSma=2.0):
+def ellipseGetAvgGeometry(ellipseOut, outRad, minSma=8.0):
     """Get the Average Q and PA."""
     tfluxE = ellipseOut['tflux_e']
     ringFlux = np.append(tfluxE[0], [tfluxE[1:] - tfluxE[:-1]])
@@ -729,7 +729,7 @@ def ellipseGetAvgGeometry(ellipseOut, outRad, minSma=2.0):
     except Exception:
         try:
             eUse = ellipseOut['ell'][(ellipseOut['sma'] <= outRad) &
-                                     (ellipseOut['sma'] >= 0.5) &
+                                     (ellipseOut['sma'] >= 3.0) &
                                      (np.isfinite(ellipseOut['ell_err'])) &
                                      (np.isfinite(ellipseOut['pa_err']))]
             pUse = ellipseOut['pa_norm'][(ellipseOut['sma'] <= outRad) &
@@ -742,7 +742,7 @@ def ellipseGetAvgGeometry(ellipseOut, outRad, minSma=2.0):
                             (np.isfinite(ellipseOut['pa_err']))]
         except Exception:
             eUse = ellipseOut['ell'][(ellipseOut['sma'] <= outRad) &
-                                     (ellipseOut['sma'] >= 0.5)]
+                                     (ellipseOut['sma'] >= 2.0)]
             pUse = ellipseOut['pa_norm'][(ellipseOut['sma'] <= outRad) &
                                          (ellipseOut['sma'] >= 0.5)]
             fUse = ringFlux[(ellipseOut['sma'] <= outRad) &
