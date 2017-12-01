@@ -735,6 +735,9 @@ def coaddImageCutFull(root,
     # Prefix of the output file
     outPre = prefix + '_' + filt + '_full'
 
+    # Output PSF file
+    psfOut = outPre + '_psf.fits'
+
     # (Ra, Dec) Pair for the center
     raDec = afwCoord.Coord(ra * afwGeom.degrees,
                            dec * afwGeom.degrees)
@@ -955,7 +958,6 @@ def coaddImageCutFull(root,
 
                 # If necessary, save the psf images
                 if savePsf and (not imgOnly):
-                    psfOut = outPre + '_psf.fits'
                     if not os.path.isfile(psfOut):
                         psfImg = getCoaddPsfImage(coadd, raDec,
                                                   label=(str(tract).strip() +
