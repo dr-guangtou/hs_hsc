@@ -660,15 +660,9 @@ def coaddBatchCutFull(root,
     Also have the option to generate (or just generate) a 3-band
     color image
     """
-    if not os.path.isdir(os.path.join(root, 'deepCoadd-results/')):
-        raise Exception("Wrong root directory for data! %s" % root)
-    else:
-        try:
-            butler = dafPersist.Butler(root)
-            if verbose:
-                "### Load in the Butler "
-        except Exception:
-            warnings.warn("### Can not load the Butler!")
+    butler = dafPersist.Butler(root)
+    if verbose:
+        "### Load in the Butler "
 
     if os.path.exists(inCat):
         if verbose:
