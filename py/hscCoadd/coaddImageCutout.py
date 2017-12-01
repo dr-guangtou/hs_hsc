@@ -244,7 +244,7 @@ def previewCoaddImage(img,
     plt.close(fig)
 
 
-def getCoaddPsfImage(calExp, coord):
+def getCoaddPsfImage(calExp, coord, label="None"):
     """Get the coadd PSF image."""
     # Get the WCS information
     wcs = calExp.getWcs()
@@ -256,7 +256,12 @@ def getCoaddPsfImage(calExp, coord):
         psfImg = psf.computeImage(coordXY)
         return psfImg
     except Exception:
-        warnings.warn("### Can not compute PSF Image !!!")
+        if prefix is "None":
+            warnings.warn("### Can not compute PSF Image !!!")
+            print("\n !!! Can not compute PSF Image !!!")
+        else:
+            warnings.warn("### Can not compute PSF Image : %s !!!" % prefix)
+            print("\n !!! Can not compute PSF Image : % s!!!" % prefix)
         return None
 
 
@@ -455,7 +460,7 @@ def coaddImageCutout(root,
             """
             coaddFound = True
             # Get the Coadded PSF image
-            psfImg = getCoaddPsfImage(coadd, coord)
+            psfImg = getCoaddPsfImage(coadd, coord, label=prefix)
             if psfImg is None:
                 noData = True
                 partialCut = True
@@ -978,9 +983,12 @@ def coaddImageCutFull(root,
                 # Photometric zeropoint
                 zpList.append(
                     2.5 * np.log10(coadd.getCalib().getFluxMag0()[0]))
+
                 # If necessary, save the psf images
                 if savePsf and (not imgOnly):
-                    psfImg = getCoaddPsfImage(coadd, raDec)
+                    psfImg = getCoaddPsfImage(coadd, raDec,
+                                              label=(str(tract).strip() +
+                                                     str(patch))
                     psfArr.append(psfImg)
                 # Get the new (X,Y) coordinate of the galaxy center
                 newCenExist = 'newCenX' in locals() and 'newCenY' in locals()
