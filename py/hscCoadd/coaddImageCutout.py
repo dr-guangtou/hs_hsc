@@ -260,8 +260,8 @@ def getCoaddPsfImage(calExp, coord, label="None"):
             warnings.warn("### Can not compute PSF Image !!!")
             print("\n !!! Can not compute PSF Image !!!")
         else:
-            warnings.warn("### Can not compute PSF Image : %s !!!" % prefix)
-            print("\n !!! Can not compute PSF Image : % s!!!" % prefix)
+            warnings.warn("### Can not compute PSF Image : %s !!!" % label)
+            print("\n !!! Can not compute PSF Image : % s!!!" % label)
         return None
 
 
