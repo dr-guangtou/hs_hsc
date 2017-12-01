@@ -849,7 +849,6 @@ def coaddImageCutFull(root,
                 # Get the total exposure time
                 visitIn = coadd.getInfo().getCoaddInputs().visits
                 ccdIn = coadd.getInfo().getCoaddInputs().ccds
-                totalExpTime = 0.0
 
             # Convert the central coordinate from Ra,Dec to pixel unit
             pixel = wcs.skyToPixel(raDec)
@@ -997,6 +996,7 @@ def coaddImageCutFull(root,
                     newCenX, newCenY = subWcs.skyToPixel(raDec)
                     newCenX = newCenX - xOri
                     newCenY = newCenY - yOri
+
     # Number of returned images
     nReturn = len(newX)
     if nReturn > 0:
@@ -1037,7 +1037,7 @@ def coaddImageCutFull(root,
                     psfUse = psfArr[ind]
                     psfUse.writeFits(psfOut)
 
-            if n is (nReturn - 1):
+            if n == (nReturn - 1):
                 # This is the largest available sub-image
                 phoZp = zpList[ind]
 
@@ -1058,19 +1058,20 @@ def coaddImageCutFull(root,
             mskEmpty[np.isnan(mskEmpty)] = 999
             # For detections, replace NaN with 0
             detEmpty[np.isnan(detEmpty)] = 0
+
         # Create a WCS for the combined image
         outWcs = apWcs.WCS(naxis=2)
         outWcs.wcs.crpix = [newCenX + 1, newCenY + 1]
         outWcs.wcs.crval = [ra, dec]
         outWcs.wcs.ctype = ["RA---TAN", "DEC--TAN"]
         outWcs.wcs.cdelt = np.array([cdMatrix[0][0], cdMatrix[1][1]])
+
         # Output to header
         outHead = outWcs.to_header()
         outHead.set("PIXEL", pixScale, "Pixel Scale [arcsec/pix]")
         outHead.set("PHOZP", phoZp, "Photometric Zeropoint")
         outHead.set("EXPTIME", 1.0, "Set exposure time to 1 sec")
         outHead.set("GAIN", 3.0, "Average GAIN for HSC CCDs")
-        outHead.set("TOTEXPT", totalExpTime, "Total Exposure Time")
         for m in range(nReturn):
             outHead.set("TRACT" + str(m), trList[m])
             outHead.set("PATCH" + str(m), paList[m])
@@ -1084,24 +1085,20 @@ def coaddImageCutFull(root,
         if not imgOnly:
             # Save the mask array
             saveImageArr(mskEmpty, outHead, outPre + '_bad.fits')
-            """ 15/12/12 Stop saving the variance plane"""
-            # Save the variance array
-            # saveImageArr(varEmpty, outHead, outPre + '_var.fits')
             # Save the sigma array
             saveImageArr(sigEmpty, outHead, outPre + '_sig.fits')
             # Save the detection mask array
             saveImageArr(detEmpty, outHead, outPre + '_det.fits')
 
         # If necessary, save the source catalog
-        if not imgOnly:
-            if saveSrc and srcFound:
-                srcUse = flatSrcArr(srcArr)
-                refUse = flatSrcArr(refArr)
-                forceUse = flatSrcArr(forceArr)
-                # Write out the catalogs
-                srcUse.writeFits(outPre + '_meas.fits')
-                refUse.writeFits(outPre + '_ref.fits')
-                forceUse.writeFits(outPre + '_forced.fits')
+        if ((not imgOnly) and saveSrc and srcFound):
+            srcUse = flatSrcArr(srcArr)
+            refUse = flatSrcArr(refArr)
+            forceUse = flatSrcArr(forceArr)
+            # Write out the catalogs
+            srcUse.writeFits(outPre + '_meas.fits')
+            refUse.writeFits(outPre + '_ref.fits')
+            forceUse.writeFits(outPre + '_forced.fits')
 
         if nReturn > 0:
             cutFound = True
@@ -1122,11 +1119,11 @@ def coaddImageCutFull(root,
         else:
             cutFound = False
             print(WAR)
-            print("### No data was collected for " +
+            print("\n!!! No data was collected for " +
                   "this RA,DEC in %s band!" % filt)
     else:
         print(WAR)
-        print("### No data was collected for this RA,DEC in %s band!" % filt)
+        print("\n### No data was collected for this RA,DEC in %s band!" % filt)
         cutFound = False
         cutFull = False
 
