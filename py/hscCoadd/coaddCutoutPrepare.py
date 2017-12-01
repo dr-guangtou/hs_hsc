@@ -13,6 +13,7 @@ import numpy as np
 from distutils.version import StrictVersion
 
 # Astropy
+from astropy.wcs import WCS
 from astropy.io import fits
 
 # Scipy
@@ -67,14 +68,12 @@ def seg2Mask(seg, sigma=6.0, mskMax=1000.0, mskThr=0.01):
     msk = copy.deepcopy(seg)
     msk[seg > 0] = 1
     # Convolve the mask image with a gaussian kernel
-    mskConv = ndimage.gaussian_filter((msk * mskMax), sigma=(sigma),
+    mskConv = ndimage.gaussian_filter((msk * mskMax),
+                                      sigma=sigma,
                                       order=0)
     mskBool = mskConv > (mskThr * mskMax)
-    mskInt = mskBool.astype(int)
 
-    del mskBool, mskConv, msk
-
-    return mskInt
+    return mskBool.astype(int)
 
 
 def objToGalfit(objs, rad=None, concen=None, zp=27.0, rbox=8.0,
@@ -235,7 +234,7 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
         axes[1, 0].axvline(r3, linestyle=':', lw=2.0)
     axes[1, 0].scatter(dist, np.log10(objs['flux']),
                        facecolors='g', edgecolors='gray',
-                       alpha=0.30, s=(r * 35.0))
+                       alpha=0.30, s=(r * 10.0))
     axes[1, 0].set_xlabel('Central Distance (pixels)', fontsize=15)
     axes[1, 0].set_ylabel('log(Flux)', fontsize=15)
     if highlight is not None:
@@ -746,12 +745,12 @@ def getFluxRadius(img, objs, maxSize=20.0, subpix=5, byteswap=True,
     if mask is not None:
         rflux, flag = sep.flux_radius(imgOri, objs['x'], objs['y'],
                                       maxSize * objs['a'], [0.2, 0.5, 0.9],
-                                      normflux=objs['cflux'], subpix=subpix,
+                                      normflux=objs['flux'], subpix=subpix,
                                       mask=mask, maskthresh=0)
     else:
         rflux, flag = sep.flux_radius(imgOri, objs['x'], objs['y'],
                                       maxSize * objs['a'], [0.2, 0.5, 0.9],
-                                      normflux=objs['cflux'], subpix=subpix)
+                                      normflux=objs['flux'], subpix=subpix)
     if isinstance(objs['x'], (int, long, float)):
         r20, r50, r90 = rflux[0], rflux[1], rflux[2]
     else:
@@ -897,6 +896,7 @@ def readCutoutImage(prefix, root=None, variance=False):
     if os.path.islink(imgFile):
         imgOri = os.readlink(imgFile)
         imgFile = imgOri
+
     if os.path.isfile(imgFile):
         imgHdu = fits.open(imgFile)
         imgArr = imgHdu[0].data
@@ -911,8 +911,7 @@ def readCutoutImage(prefix, root=None, variance=False):
         mskOri = os.readlink(mskFile)
         mskFile = mskOri
     if os.path.isfile(mskFile):
-        mskHdu = fits.open(mskFile)
-        mskArr = mskHdu[0].data
+        mskArr = fits.open(mskFile)[0].data
     else:
         print("\n### Can not find the coadd BadPlane file!")
         mskArr = None
@@ -922,8 +921,7 @@ def readCutoutImage(prefix, root=None, variance=False):
         detOri = os.readlink(detFile)
         detFile = detOri
     if os.path.isfile(detFile):
-        detHdu = fits.open(detFile)
-        detArr = detHdu[0].data
+        detArr = fits.open(detFile)[0].data
     else:
         print("### Can not find the coadd DetectionPlane file!")
         detArr = None
@@ -933,8 +931,7 @@ def readCutoutImage(prefix, root=None, variance=False):
         sigOri = os.readlink(sigFile)
         sigFile = sigOri
     if os.path.isfile(sigFile):
-        sigHdu = fits.open(sigFile)
-        sigArr = sigHdu[0].data
+        sigArr = fits.open(sigFile)[0].data
     else:
         print("\n### Can not find the coadd sigectionPlane file!")
         sigArr = None
@@ -1259,7 +1256,7 @@ def coaddCutoutPrepare(prefix, root=None, verbose=True,
         - Those numbers are pretty random...
     """
     galR20, galR50, galR90 = getFluxRadius(imgSubC, objC[cenObjIndexC],
-                                           maxSize=30.0, subpix=5,
+                                           maxSize=6.0, subpix=5,
                                            byteswap=False)
     if not np.isfinite(galR20):
         sepFlags = addFlag(sepFlags, 'R20_FAIL', True)
@@ -1414,7 +1411,7 @@ def coaddCutoutPrepare(prefix, root=None, verbose=True,
     if visual and showAll:
         """ Fig.c """
         objPNG1 = os.path.join(rerunDir, (prefix + '_' + suffix + 'objC.png'))
-        objEllC = getEll2Plot(objC, radius=(objC['a'] * growH))
+        objEllC = getEll2Plot(objC, radius=(objC['a'] * growC))
         showSEPImage(imgSubC, contrast=0.06, title='Detections - Cold Run',
                      pngName=objPNG1, ellList1=objEllC, ellColor1='b')
         """ Fig.d """
@@ -1940,7 +1937,8 @@ def coaddCutoutPrepare(prefix, root=None, verbose=True,
     """
     if combDet and detFound:
         if verbose:
-            print("\n###    Combine the final mask with the HSC DETECTION MASK!")
+            print("\n###    Combine the final mask with the HSC \
+                  DETECTION MASK!")
         mskFinal = (mskFinal | detMskConv)
         if multiMask:
             mskSmall = (mskSmall | detSMskConv)
@@ -1974,7 +1972,8 @@ def coaddCutoutPrepare(prefix, root=None, verbose=True,
                                               (galPA * np.pi / 180.0), r=1.0)
     if sumMskCen > 0:
         sepFlags = addFlag(sepFlags, 'MSK_CEN', True)
-        print("###    %d pixels around center have been masked out" % sumMskCen)
+        print("###    %d pixels around center have been \
+              masked out" % sumMskCen)
     else:
         sepFlags = addFlag(sepFlags, 'MSK_CEN', False)
     sumMskR20, dump1, dump2 = sep.sum_ellipse(np.float32(mskFinal),
@@ -2166,46 +2165,46 @@ if __name__ == '__main__':
                         type=int, default=40)
     parser.add_argument('--thrH', dest='thrH',
                         help='Detection threshold for the Hot Run',
-                        type=float, default=2.0)
+                        type=float, default=1.5)
     parser.add_argument('--thrC', dest='thrC',
                         help='Detection threshold for the Cold Run',
-                        type=float, default=1.2)
+                        type=float, default=3.0)
     parser.add_argument('--growC', dest='growC',
                         help='Ratio of Growth for the Cold Objects',
-                        type=float, default=4.0)
+                        type=float, default=5.0)
     parser.add_argument('--growW', dest='growW',
                         help='Ratio of Growth for the Warm Objects',
-                        type=float, default=3.0)
+                        type=float, default=4.0)
     parser.add_argument('--growH', dest='growH',
                         help='Ratio of Growth for the Hot Objects',
-                        type=float, default=1.2)
+                        type=float, default=2.1)
     parser.add_argument('--minDetC', dest='minDetC',
                         help='Minimum pixels for Cold Detections',
                         type=float, default=8.0)
     parser.add_argument('--minDetH', dest='minDetH',
                         help='Minimum pixels for Hot Detections',
-                        type=float, default=5.0)
+                        type=float, default=4.0)
     parser.add_argument('--debThrC', dest='debThrC',
                         help='Deblending threshold for the Cold Run',
-                        type=float, default=32.0)
+                        type=float, default=64.0)
     parser.add_argument('--debThrH', dest='debThrH',
                         help='Deblending threshold for the Hot Run',
-                        type=float, default=16.0)
+                        type=float, default=32.0)
     parser.add_argument('--debConC', dest='debConC',
                         help='Deblending continuum level for the Cold Run',
-                        type=float, default=0.001)
+                        type=float, default=0.0001)
     parser.add_argument('--debConH', dest='debConH',
                         help='Deblending continuum level for the Hot Run',
-                        type=float, default=0.0001)
+                        type=float, default=0.0005)
     parser.add_argument('--galR1', dest='galR1',
                         help='galR1 = galR1 * galR90',
-                        type=float, default=2.0)
+                        type=float, default=1.6)
     parser.add_argument('--galR2', dest='galR2',
                         help='galR2 = galR2 * galR90',
-                        type=float, default=4.0)
+                        type=float, default=3.1)
     parser.add_argument('--galR3', dest='galR3',
                         help='galR3 = galR3 * galR90',
-                        type=float, default=6.0)
+                        type=float, default=6.5)
     parser.add_argument('--sigma', dest='sigma',
                         help='Sigma to Gaussian smooth the segmentation image',
                         type=float, default=6.0)
