@@ -837,8 +837,10 @@ def coaddCutoutSbp(prefix, root=None, verbose=True, psf=True, inEllip=None,
         galQ, galPA = mskHead['GAL_Q'], mskHead['GAL_PA']
     else:
         galQ, galPA = galQ0, galPA0
+
     galQ = galQ if galQ <= 0.95 else 0.95
     galPA = hUtil.normAngle(galPA, lower=-90.0, upper=90.0, b=True)
+
     if galRe is None:
         galR50 = mskHead['GAL_R50']
     else:
@@ -992,9 +994,15 @@ def coaddCutoutSbp(prefix, root=None, verbose=True, psf=True, inEllip=None,
                 if (ellOut2['avg_q'][0] <= 0.95):
                     galQ0 = ellOut2['avg_q'][0]
                 else:
-                    galQ0 = 0.95
-                galPA0 = hUtil.normAngle(ellOut2['avg_pa'][0], lower=-90.0,
-                                         upper=90.0, b=True)
+                    galQ0 = galQ
+
+                if np.isfinite(ellOut2['avg_pa'][0]):
+                    galPA0 = hUtil.normAngle(ellOut2['avg_pa'][0],
+                                             lower=-90.0,
+                                             upper=90.0,
+                                             b=True)
+                else:
+                    galPA0 = galPA
 
             """ # Start with Stage 3 """
             if verbose:
@@ -1264,6 +1272,7 @@ def coaddCutoutSbp(prefix, root=None, verbose=True, psf=True, inEllip=None,
                 raise Exception("!!!!! FORCED ELLIPSE RUN FAILED !!!!")
 
             gc.collect()
+
 
 if __name__ == '__main__':
 
