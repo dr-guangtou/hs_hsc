@@ -14,8 +14,6 @@ from astropy.io import fits
 
 import coaddCutoutPrepare as ccp
 
-COM = '#' * 100
-SEP = '-' * 100
 WAR = '!' * 100
 
 
@@ -28,16 +26,17 @@ def run(args):
     if os.path.isfile(args.incat):
         """ Basic information """
         data = fits.open(args.incat)[1].data
-        id = (args.id)
+        idx = (args.id)
         rerun = (args.rerun).strip()
         prefix = (args.prefix).strip()
-        filter = (args.filter).strip().upper()
+        filt = (args.filter).strip().upper()
+
         """ Keep a log """
         if args.sample is not None:
             logPre = prefix + '_' + args.sample
         else:
             logPre = prefix
-        logFile = logPre + '_prep_' + filter + '.log'
+        logFile = logPre + '_prep_' + filt + '.log'
         if not os.path.isfile(logFile):
             os.system('touch ' + logFile)
 
@@ -46,12 +45,13 @@ def run(args):
 
         for galaxy in data:
             """ Galaxy ID and prefix """
-            galID = str(galaxy[id]).strip()
-            galPrefix = prefix + '_' + galID + '_' + filter + '_full'
+            galID = str(galaxy[idx]).strip()
+            galPrefix = prefix + '_' + galID + '_' + filt + '_full'
             if args.verbose:
                 print("\n## Will Deal with %s now ! " % galID)
+
             """Folder for the data"""
-            galRoot = os.path.join(galID, filter)
+            galRoot = os.path.join(galID, filt)
             if not os.path.isdir(galRoot):
                 warnings.warn('### Cannot find folder %s' % galRoot)
                 with open(logFile, "a") as logMatch:
@@ -62,6 +62,7 @@ def run(args):
                     except IOError:
                         pass
                 continue
+
             """Image"""
             galImg = galPrefix + '_img.fits'
             if not os.path.isfile(os.path.join(galRoot, galImg)):
@@ -93,12 +94,12 @@ def run(args):
                         growC=5.0,
                         sigma=6.0,
                         sigthr=0.02,
-                        minDetH=8,
-                        minDetC=16,
+                        minDetH=4,
+                        minDetC=8,
                         debThrH=32,
-                        debThrC=48,
+                        debThrC=64,
                         debConH=0.0005,
-                        debConC=0.0005,
+                        debConC=0.0001,
                         kernel=4,
                         central=1,
                         maskMethod=1,
@@ -235,9 +236,9 @@ def run(args):
                 print(WAR)
                 print(str(errMsg))
                 warnings.warn('### The preparation is failed for %s in %s' %
-                              (galPrefix, filter))
+                              (galPrefix, filt))
                 logging.warning('### The preparation is failed for %s in %s' %
-                                (galPrefix, filter))
+                                (galPrefix, filt))
                 with open(logFile, "a") as logMatch:
                     logStr = "%25s  %10s  FAIL \n"
                     try:
@@ -252,8 +253,10 @@ def run(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("prefix", help="Prefix of the galaxy image files")
-    parser.add_argument("incat", help="The input catalog for cutout")
+    parser.add_argument("prefix",
+                        help="Prefix of the galaxy image files")
+    parser.add_argument("incat",
+                        help="The input catalog for cutout")
     parser.add_argument(
         '-i',
         '--id',
@@ -360,7 +363,7 @@ if __name__ == '__main__':
         dest='minDetH',
         help='Minimum pixels for Hot Detections',
         type=float,
-        default=5.0)
+        default=4.0)
     parser.add_argument(
         '--debThrC',
         dest='debThrC',
