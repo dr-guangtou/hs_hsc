@@ -256,7 +256,7 @@ def getCoaddPsfImage(calExp, coord, label="None"):
         psfImg = psf.computeImage(coordXY)
         return psfImg
     except Exception:
-        if prefix is "None":
+        if label is "None":
             warnings.warn("### Can not compute PSF Image !!!")
             print("\n !!! Can not compute PSF Image !!!")
         else:
