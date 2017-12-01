@@ -988,6 +988,7 @@ def coaddImageCutFull(root,
                     psfImg = getCoaddPsfImage(coadd, raDec,
                                               label=(str(tract).strip() +
                                                      str(patch))
+                                              )
                     psfArr.append(psfImg)
                 # Get the new (X,Y) coordinate of the galaxy center
                 newCenExist = 'newCenX' in locals() and 'newCenY' in locals()
