@@ -373,13 +373,6 @@ def coaddImageCutout(root,
     # No longer support hscPipe < 4
     coaddData = "deepCoadd_calexp"
 
-    # See if we are using hscPipe > 5
-    try:
-        dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
-        hscPipe5 = False
-    except AttributeError:
-        hscPipe5 = True
-
     # Get the SkyMap of the database
     if butler is None:
         try:
@@ -730,28 +723,22 @@ def coaddImageCutFull(root,
     # No longer support hscPipe < 4
     coaddData = "deepCoadd_calexp"
 
-    # See if we are using hscPipe > 5
-    try:
-        dafPersist.eupsVersions.EupsVersions().versions['hscPipe']
-        hscPipe5 = False
-    except AttributeError:
-        hscPipe5 = True
-
     # Get the SkyMap of the database
     if butler is None:
-        try:
-            butler = dafPersist.Butler(root)
-        except Exception:
-            print('## Can not load the correct Butler!')
-
+        butler = dafPersist.Butler(root)
     skyMap = butler.get("deepCoadd_skyMap", immediate=True)
 
     # Check the filter
     if not cdColor.isHscFilter(filt, short=False):
         raise Exception("## Wrong Filter for HSC Data!")
 
+    # Prefix of the output file
+    outPre = prefix + '_' + filt + '_full'
+
     # (Ra, Dec) Pair for the center
-    raDec = afwCoord.Coord(ra * afwGeom.degrees, dec * afwGeom.degrees)
+    raDec = afwCoord.Coord(ra * afwGeom.degrees,
+                           dec * afwGeom.degrees)
+
     # [Ra, Dec] list
     raList, decList = cdColor.getCircleRaDec(ra, dec, size)
     points = map(lambda x, y: afwGeom.Point2D(x, y), raList, decList)
@@ -760,9 +747,10 @@ def coaddImageCutFull(root,
     # Expected size and center position
     dimExpect = int(2 * size + 1)
     cenExpect = (dimExpect / 2.0, dimExpect / 2.0)
-    sizeExpect = int(dimExpect**2)
+    sizeExpect = int(dimExpect ** 2)
+
     # Get the half size of the image in degree
-    sizeDegree = size * 0.168 / 3600.0
+    sizeDegree = (size * 0.168 / 3600.0)
 
     # Verbose
     if verbose:
@@ -772,15 +760,15 @@ def coaddImageCutFull(root,
                                                           dimExpect))
 
     # Create empty arrays
-    imgEmpty = np.empty((dimExpect, dimExpect), dtype="float")
-    imgEmpty.fill(np.nan)
+    imgEmpty = np.full((dimExpect, dimExpect), np.nan,
+                       dtype="float")
     if not imgOnly:
-        mskEmpty = np.empty((dimExpect, dimExpect), dtype="uint8")
-        varEmpty = np.empty((dimExpect, dimExpect), dtype="float")
-        detEmpty = np.empty((dimExpect, dimExpect), dtype="float")
-        mskEmpty.fill(np.nan)
-        varEmpty.fill(np.nan)
-        detEmpty.fill(np.nan)
+        mskEmpty = np.full((dimExpect, dimExpect), 1,
+                           dtype="uint8")
+        varEmpty = np.full((dimExpect, dimExpect), np.nan,
+                           dtype="float")
+        detEmpty = np.full((dimExpect, dimExpect), np.nan,
+                           dtype="float")
 
     # Figure out the area we want, and read the data.
     # For coadds the WCS is the same in all bands,
@@ -792,28 +780,11 @@ def coaddImageCutFull(root,
     if verbose:
         print("### Will deal with %d patches" % nPatch)
 
-    # Prefix of the output file
-    outPre = prefix + '_' + filt + '_full'
-
-    newX = []
-    newY = []
-    boxX = []
-    boxY = []
-    boxSize = []
-    #
-    trList = []
-    paList = []
-    zpList = []
-    #
-    imgArr = []
-    mskArr = []
-    varArr = []
-    detArr = []
-    psfArr = []
-    #
-    srcArr = []
-    refArr = []
-    forceArr = []
+    newX, newY, boxX, boxY, boxSize = [], [], [], [], []
+    trList, paList, zpList = [], [], []
+    imgArr, mskArr, varArr, detArr = [], [], [], []
+    if saveSrc:
+        srcArr, refArr, forceArr = [], [], []
 
     # Go through all these images
     for j in range(nPatch):
@@ -844,9 +815,9 @@ def coaddImageCutFull(root,
                 cdMatrix = wcs.getCDMatrix()
                 # Get the pixel size in arcsec
                 pixScale = wcs.pixelScale().asDegrees() * 3600.0
-                # Get the total exposure time
-                visitIn = coadd.getInfo().getCoaddInputs().visits
-                ccdIn = coadd.getInfo().getCoaddInputs().ccds
+                # TODO: Get the total exposure time
+                # visitIn = coadd.getInfo().getCoaddInputs().visits
+                # ccdIn = coadd.getInfo().getCoaddInputs().ccds
 
             # Convert the central coordinate from Ra,Dec to pixel unit
             pixel = wcs.skyToPixel(raDec)
@@ -885,6 +856,7 @@ def coaddImageCutFull(root,
                     mskBad = getCoaddBadMsk(subImage,
                                             no_bright_object=no_bright_object)
                     mskArr.append(mskBad.getArray())
+
                     # Get the source catalog
                     if saveSrc:
                         noFootprint = afwTable.SOURCE_IO_NO_FOOTPRINTS
@@ -965,9 +937,9 @@ def coaddImageCutFull(root,
                                     pass
 
                             srcFound = False
-                # Save the width of the BBox
+
+                # Save the width, height of the BBox
                 boxX.append(bbox.getWidth())
-                # Save the heigth of the BBox
                 boxY.append(bbox.getHeight())
                 # Save the size of the BBox in unit of pixels
                 boxSize.append(bbox.getWidth() * bbox.getHeight())
