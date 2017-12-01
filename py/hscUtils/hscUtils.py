@@ -1164,3 +1164,17 @@ def removeIsNullCol(cat, output=None, catHdu=1, string='isnull',
 
     if verbose:
         print("Saving new data ...")
+
+
+def getStarCatalog():
+    """Load the bright star catalog.
+
+    The catalog should be in .npz format, and is
+    located at $SSP_BRIGHT_STARS
+    """
+    try:
+        star_rec = np.load(os.environ['SSP_BRIGHT_STARS'])
+        return star_rec
+    except Exception:
+        warnings.warn("!!! Can not find the bright star catalog!")
+        return None
