@@ -257,10 +257,8 @@ def getCoaddPsfImage(calExp, coord, label="None"):
         return psfImg
     except Exception:
         if label is "None":
-            warnings.warn("### Can not compute PSF Image !!!")
             print("\n !!! Can not compute PSF Image !!!")
         else:
-            warnings.warn("### Can not compute PSF Image : %s !!!" % label)
             print("\n !!! Can not compute PSF Image : % s!!!" % label)
         return None
 
@@ -985,11 +983,15 @@ def coaddImageCutFull(root,
 
                 # If necessary, save the psf images
                 if savePsf and (not imgOnly):
-                    psfImg = getCoaddPsfImage(coadd, raDec,
-                                              label=(str(tract).strip() +
-                                                     str(patch))
-                                              )
-                    psfArr.append(psfImg)
+                    psfOut = outPre + '_psf.fits'
+                    if not os.path.isfile(psfOut):
+                        psfImg = getCoaddPsfImage(coadd, raDec,
+                                                  label=(str(tract).strip() +
+                                                         "  " + str(patch))
+                                                  )
+                        if psfImg is not None:
+                            psfImg.writeFits(psfOut)
+
                 # Get the new (X,Y) coordinate of the galaxy center
                 newCenExist = 'newCenX' in locals() and 'newCenY' in locals()
                 if not newCenExist:
@@ -997,6 +999,10 @@ def coaddImageCutFull(root,
                     newCenX, newCenY = subWcs.skyToPixel(raDec)
                     newCenX = newCenX - xOri
                     newCenY = newCenY - yOri
+
+    # Check if PSF is available
+    if not os.path.isfile(psfOut):
+        warnings.warn("!!! Can not generate PSF for %s" % prefix)
 
     # Number of returned images
     nReturn = len(newX)
@@ -1006,9 +1012,7 @@ def coaddImageCutFull(root,
         indSize = np.argsort(boxSize)
 
         # Go through the returned images, put them in the cutout region
-        for n in range(nReturn):
-            ind = indSize[n]
-
+        for ind in indSize:
             # Put in the image array
             imgUse = imgArr[ind]
             imgEmpty[newY[ind]:(newY[ind] + boxY[ind]), newX[ind]:(
@@ -1030,21 +1034,6 @@ def coaddImageCutFull(root,
                 detUse = detArr[ind]
                 detEmpty[newY[ind]:(newY[ind] + boxY[ind]), newX[ind]:(
                     newX[ind] + boxX[ind])] = detUse[:, :]
-
-                # Save the PSF image
-                psfOut = outPre + '_psf.fits'
-                if ((psfArr[ind] is not None) and
-                    (not os.path.isfile(psfOut))):
-                    psfUse = psfArr[ind]
-                    psfUse.writeFits(psfOut)
-
-            if n == (nReturn - 1):
-                # This is the largest available sub-image
-                phoZp = zpList[ind]
-
-        # Check if PSF is available
-        if not os.path.isfile(psfOut):
-            warnings.warn("!!! Can not generate PSF for %s" % prefix)
 
         # See if all the cutout region is covered by data
         nanPix = np.sum(np.isnan(imgEmpty))
@@ -1070,7 +1059,7 @@ def coaddImageCutFull(root,
         # Output to header
         outHead = outWcs.to_header()
         outHead.set("PIXEL", pixScale, "Pixel Scale [arcsec/pix]")
-        outHead.set("PHOZP", phoZp, "Photometric Zeropoint")
+        outHead.set("PHOZP", 27.0, "Photometric Zeropoint")
         outHead.set("EXPTIME", 1.0, "Set exposure time to 1 sec")
         outHead.set("GAIN", 3.0, "Average GAIN for HSC CCDs")
         for m in range(nReturn):
