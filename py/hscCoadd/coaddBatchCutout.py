@@ -660,7 +660,7 @@ def coaddBatchCutFull(root,
     Also have the option to generate (or just generate) a 3-band
     color image
     """
-    if not os.path.isdir(root):
+    if not os.path.isdir(os.path.join(root, 'deepCoadd-results/')):
         raise Exception("Wrong root directory for data! %s" % root)
     else:
         try:
