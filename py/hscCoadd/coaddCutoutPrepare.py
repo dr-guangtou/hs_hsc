@@ -169,8 +169,8 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
         r = objs['a']
     # Set up the plot
     fig, axes = plt.subplots(2, 2, figsize=(9, 9))
-    fig.subplots_adjust(hspace=0.28, wspace=0.20,
-                        left=0.12, bottom=0.10,
+    fig.subplots_adjust(hspace=0.18, wspace=0.28,
+                        left=0.10, bottom=0.07,
                         top=0.99, right=0.99)
     #  Fig1
     if fluxRatio1 is not None:
@@ -182,8 +182,8 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
     axes[0, 0].scatter(np.log10(objs['flux']), np.log10(r),
                        facecolors='g', edgecolors='gray',
                        alpha=0.30, s=(500.0 / np.sqrt(dist)))
-    axes[0, 0].set_xlabel('log(Flux)', fontsize=14)
-    axes[0, 0].set_ylabel('log(Radius/pixel)', fontsize=14)
+    axes[0, 0].set_xlabel('log(Flux)', fontsize=15)
+    axes[0, 0].set_ylabel('log(Radius/pixel)', fontsize=15)
     if highlight is not None:
         axes[0, 0].scatter(np.log10(objs[highlight]['flux']),
                            np.log10(r[highlight]),
@@ -201,8 +201,8 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
     axes[0, 1].scatter(np.log10(objs['flux'] / (objs['a'] * objs['b'])),
                        np.log10(r), facecolors='g', edgecolors='gray',
                        alpha=0.30, s=(500.0 / np.sqrt(dist)))
-    axes[0, 1].set_xlabel('log(Flux/Area)', fontsize=14)
-    axes[0, 1].set_ylabel('log(Radius/pixel)', fontsize=14)
+    axes[0, 1].set_xlabel('log(Flux/Area)', fontsize=15)
+    axes[0, 1].set_ylabel('log(Radius/pixel)', fontsize=15)
     if highlight is not None:
         axes[0, 1].scatter((np.log10(objs[highlight]['flux'] /
                                      (objs[highlight]['a'] *
@@ -217,7 +217,7 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
     axes[0, 1].text(0.60, 0.06, 'Size: Approximity', fontsize=16,
                     transform=axes[0, 1].transAxes, ha='center')
     if prefix is not None:
-        axes[0, 1].text(0.50, 0.91, prefix, fontsize=20, ha='center',
+        axes[0, 1].text(0.50, 0.91, prefix, fontsize=15, ha='center',
                         transform=axes[0, 0].transAxes)
 
     #  Fig3
@@ -236,8 +236,8 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
     axes[1, 0].scatter(dist, np.log10(objs['flux']),
                        facecolors='g', edgecolors='gray',
                        alpha=0.30, s=(r * 35.0))
-    axes[1, 0].set_xlabel('Central Distance (pixels)', fontsize=14)
-    axes[1, 0].set_ylabel('log(Flux)', fontsize=14)
+    axes[1, 0].set_xlabel('Central Distance (pixels)', fontsize=15)
+    axes[1, 0].set_ylabel('log(Flux)', fontsize=15)
     if highlight is not None:
         axes[1, 0].scatter(dist[highlight],
                            np.log10(objs[highlight]['flux']),
@@ -261,8 +261,8 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
     axes[1, 1].scatter(dist, np.log10(r), facecolors='g',
                        edgecolors='gray', alpha=0.30,
                        s=(np.log10(objs['flux']) ** 4.0 + 30.0))
-    axes[1, 1].set_xlabel('Central Distance (pixels)', fontsize=14)
-    axes[1, 1].set_ylabel('log(Radius/pixel)', fontsize=14)
+    axes[1, 1].set_xlabel('Central Distance (pixels)', fontsize=15)
+    axes[1, 1].set_ylabel('log(Radius/pixel)', fontsize=15)
     if highlight is not None:
         axes[1, 1].scatter(dist[highlight], np.log10(r[highlight]),
                            color='b', alpha=0.50,
@@ -287,7 +287,7 @@ def showObjects(objs, dist, rad=None, outPNG='sep_object.png',
     plt.close(fig)
 
 
-def showSEPImage(image, contrast=0.2, size=6, cmap=cmap1,
+def showSEPImage(image, contrast=0.2, size=5, cmap=cmap1,
                  title='Image', pngName='sep.png', titleInside=True,
                  ellList1=None, ellList2=None, ellList3=None,
                  ellColor1='b', ellColor2='r', ellColor3='g',
@@ -299,19 +299,12 @@ def showSEPImage(image, contrast=0.2, size=6, cmap=cmap1,
     Parameters:
     """
     fig = plt.figure(figsize=(size, size))
-    fig.subplots_adjust(hspace=0.1, wspace=0.1,
-                        bottom=0.10, left=0.11,
-                        top=0.92, right=0.98)
-    ax = fig.add_axes([0.000, 0.002, 0.996, 0.996])
-    fontsize = 10
-    ax.minorticks_on()
+    fig.subplots_adjust(hspace=0.0, wspace=0.0,
+                        bottom=0.0, left=0.0,
+                        top=1.0, right=1.0)
+    ax = fig.add_axes([0.002, 0.002, 0.998, 0.998])
 
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label1.set_fontsize(fontsize)
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label1.set_fontsize(fontsize)
-
-    ax.set_title(title, fontsize=14, fontweight='bold', color='r')
+    ax.set_title(title, fontsize=16, fontweight='bold', color='w')
     if not titleInside:
         ax.title.set_position((0.5, 1.01))
     else:
@@ -382,7 +375,7 @@ def showSEPImage(image, contrast=0.2, size=6, cmap=cmap1,
         ell3.set_linewidth(2.5)
         ell3.set_linestyle('dashed')
 
-    fig.savefig(pngName, dpi=80)
+    fig.savefig(pngName, dpi=90)
     plt.close(fig)
 
 
