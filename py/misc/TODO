@@ -1,7 +1,0 @@
-# Use this folder to store useful reference codes 
-
-* Most of these codes are not used 
-    - cutout.py : Make cutout image with WCS information 
-    - asinh_norm.py : Scale the image using asinh method 
-
-* coverage : Eearly code for plotting the coverage of UDeep field __Obselete__
