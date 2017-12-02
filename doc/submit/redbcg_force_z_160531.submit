@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+#PBS -N redbcg_force_z
+#PBS -o pbs/${PBS_JOBNAME}.out
+#PBS -e pbs/${PBS_JOBNAME}.err
+#PBS -V
+#PBS -m n
+#PBS -t 1-7
+
+cd $PBS_O_WORKDIR
+
+INPUT="sample/dr1_redbcg_use_"${PBS_ARRAYID}".fits" 
+ROOT=$DR1WIDE
+
+echo $XISOPHOTE
+echo $XTTOOLS
+
+# HSC-Z
+batchForceSbp.py redbcg $INPUT HSC-Z \
+    -i 'index' -r default \
+    -mf HSC-I -rf HSC-I -rr default -rm 3 \
+    --plmask \
+    --noCheckCenter \
+    --isophote $XISOPHOTE \
+    --xttools $XTTOOLS --verbose
+sleep 5
+
+batchForceSbp.py redbcg $INPUT HSC-Z \
+    -i 'index' -r default --imgSub \
+    -mf HSC-I -rf HSC-I -rr default -rm 3 \
+    --bkgCor --updateIntens \
+    --plmask \
+    --noCheckCenter \
+    --isophote $XISOPHOTE \
+    --xttools $XTTOOLS --verbose

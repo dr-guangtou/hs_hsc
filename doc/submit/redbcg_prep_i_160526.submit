@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+#PBS -N redbcg_prep_i
+#PBS -o pbs/${PBS_JOBNAME}.out
+#PBS -e pbs/${PBS_JOBNAME}.err
+#PBS -V
+#PBS -m n
+#PBS -l nodes=1:ppn=7
+#PBS -t 1-7
+
+cd $PBS_O_WORKDIR
+
+INPUT="sample/dr1_redbcg_use_"${PBS_ARRAYID}".fits" 
+ROOT=$DR1WIDE
+
+batchPrep.py redbcg $INPUT -i 'index' \
+    -r default -f HSC-I --multiMask

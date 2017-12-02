@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+#PBS -N redbcg_color_giz
+#PBS -o ../pbs/${PBS_JOBNAME}.out
+#PBS -e ../pbs/${PBS_JOBNAME}.err
+#PBS -V
+#PBS -m n
+#PBS -l nodes=1:ppn=7
+#PBS -t 1-7
+
+cd $PBS_O_WORKDIR
+
+INPUT="../sample/dr1_redbcg_use_"${PBS_ARRAYID}".fits" 
+ROOT=$DR1WIDE
+
+batchColor.py $ROOT $INPUT -f HSC-I -p redbcg \
+    -cf giz -oc -id index -ra ra_hsc -dec dec_hsc -z z_use \
+    -info1 lambda_redm -info2 p_cen_1_redm --verbose
+
