@@ -8,7 +8,6 @@ import os
 import copy
 import glob
 import argparse
-import warnings
 
 import numpy as np
 
@@ -636,10 +635,7 @@ def combMskImage(msk1, msk2):
     """
     if (msk1.shape[0] != msk2.shape[0]) or (msk1.shape[1] != msk2.shape[1]):
         raise Exception("### The two masks need to have the same shape!")
-    mskComb = np.zeros(msk1.shape, dtype='uint8')
-    mskComb[(msk1 > 0) | (msk2 > 0)] = 1
-
-    return mskComb
+    return ((msk1 > 0) | (msk2 > 0))
 
 
 def combObjCat(objCold, objHot, tol=6.0, cenDistC=None, rad=80.0, keepH=True):
@@ -987,7 +983,8 @@ def sepGetBkg(img, mask=None, bkgSize=None, bkgFilter=None):
     if bkgFilter is None:
         bkgFilter = 4
 
-    bkg = sep.Background(img, mask, bkgX, bkgY, bkgFilter, bkgFilter)
+    bkg = sep.Background(img, mask=mask, bw=bkgX, bh=bkgY,
+                         fw=bkgFilter, fh=bkgFilter)
     # Subtract the Background off
     bkg.subfrom(img)
 
@@ -1082,17 +1079,9 @@ def matchStarCatalog(starCat, imgHead, margin=200, aggres=600):
     dec_min, dec_max = np.min([dec0, dec1]), np.max([dec0, dec1])
 
     starClose = starCat[(starCat['ra'] >= ra_min) &
-                      (starCat['ra'] <= ra_max) &
-                      (starCat['dec'] >= dec_min) &
-                      (starCat['dec'] <= dec_max)]
-
-    raMin, raMax = np.min([ra0, ra1]), np.max([ra0, ra1])
-    decMin, decMax = np.min([dec0, dec1]), np.max([dec0, dec1])
-
-    starClose = starCat[(starCat['ra'] >= raMin) &
-                        (starCat['ra'] <= raMax) &
-                        (starCat['dec'] >= decMin) &
-                        (starCat['dec'] <= decMax)]
+                        (starCat['ra'] <= ra_max) &
+                        (starCat['dec'] >= dec_min) &
+                        (starCat['dec'] <= dec_max)]
 
     if len(starClose) > 0:
         xStar, yStar = imgWcs.all_world2pix(starClose['ra'],
@@ -1214,10 +1203,8 @@ def coaddCutoutPrepare(prefix,
         if (not os.path.islink(link)) and (not os.path.isfile(link)):
             os.symlink(fitsFile, link)
 
-    # DETECTION array is optional
-    detFound = (detArr is not None)
-    #  BAD array is optional
-    badFound = (mskArr is not None)
+    # DETECTION and BAD array is optional
+    detFound, badFound = (detArr is not None), (mskArr is not None)
 
     # Setup up an array for the flags """
     sepFlags = np.array([], dtype=[('name', 'a20'),
@@ -1229,29 +1216,15 @@ def coaddCutoutPrepare(prefix,
 
     # Get the information from the header
     pixX, pixY, dimX, dimY, photZP, expTot = readCutoutHeader(imgHead)
-    if verbose:
-        print("\n###    The image size in X/Y directions " +
-              "are %d / %d pixels" % (dimX, dimY))
-        print("###                      %10.2f / %10.2f \
-                arcsecs" % (dimX * pixX, dimY * pixY))
 
     # Center of the galaxy
-    if galX is None:
-        galX = (dimX / 2.0)
-    if galY is None:
-        galY = (dimY / 2.0)
-    if verbose:
-        print("###    The Galaxy Center is assumed at \
-              %6.1f, %6.1f" % (galX, galY))
+    galX = (dimX / 2.0) if galX is None else galX
+    galY = (dimX / 2.0) if galY is None else galY
 
     # Define the suffix for the files
     if (suffix is not '') and (suffix[-1] is not '_'):
         suffix = suffix + '_'
 
-    """
-    If external DS9 region files are provided, load them in,
-    and convert them into mask array
-    """
     # Region to be masked out
     if (regMask is not None) and os.path.isfile(regMask):
         if verbose:
@@ -1283,7 +1256,7 @@ def coaddCutoutPrepare(prefix,
     # Cold Background Run
     if verbose:
         print("\n### 1a. BACKGROUND SUBTRACTION USING SEP -- COLD RUN")
-    bkgC, imgSubC = sepGetBkg(imgByteSwap(imgArr), bkgSize=bSizeC, bkgFilter=5)
+    bkgC, imgSubC = sepGetBkg(imgByteSwap(imgArr), bkgSize=bSizeC, bkgFilter=7)
     if noBkgC:
         imgSubC = imgByteSwap(imgArr)
     if verbose:
@@ -1292,7 +1265,8 @@ def coaddCutoutPrepare(prefix,
     if visual and showAll:
         showSEPImage(bkgC.back(), contrast=0.3, title='Background - Cold Run',
                      pngName=os.path.join(rerunDir,
-                                          (prefix + '_' + suffix + 'bkgC.png')))
+                                          (prefix + '_' +
+                                           suffix + 'bkgC.png')))
 
     # Hot Background Run
     if verbose:
@@ -1309,7 +1283,8 @@ def coaddCutoutPrepare(prefix,
     if visual and showAll:
         showSEPImage(bkgH.back(), contrast=0.3, title='Background - Hot Run',
                      pngName=os.path.join(rerunDir,
-                                          (prefix + '_' + suffix + 'bkgH.png')))
+                                          (prefix + '_' +
+                                           suffix + 'bkgH.png')))
     """
     2. Object detections
 
@@ -1318,116 +1293,72 @@ def coaddCutoutPrepare(prefix,
     # The threshold and the convolution kernel for cold run """
     if verbose:
         print("\n### 2. DETECT OBJECTS USING SEP")
-    if verbose:
-        print("\n###  2.1. OBJECT DETECTION: COLD RUN")
+        print("###  2.1. OBJECT DETECTION: COLD RUN")
         print("###     Cold run detection threshold: %4.1f" % thrC)
 
     # Get the convolution kernel
     convKerC = getConvKernel(kernel)
 
-    # Cold Detection Run
     if useSigArr and (sigArr is not None):
-        errArr = imgByteSwap(sigArr)
-        try:
-            detThrC = thrC
-            objC, segC = sep.extract(
-                imgSubC,
-                detThrC,
-                minarea=minDetC,
-                deblend_nthresh=debThrC,
-                deblend_cont=debConC,
-                filter_kernel=convKerC,
-                filter_type='matched',
-                err=errArr,
-                segmentation_map=True)
-        except Exception:
-            detThrC = (thrC + 2)
-            objC, segC = sep.extract(
-                imgSubC,
-                detThrC,
-                minarea=minDetC,
-                deblend_nthresh=int(debThrC / 2),
-                deblend_cont=debConC,
-                err=errArr,
-                filter_kernel=convKerC,
-                filter_type='matched',
-                segmentation_map=True)
+        errArr, filter_type = imgByteSwap(sigArr), 'matched'
+        detThrC, detThrH = thrC, thrH
     else:
-        try:
-            detThrC = bkgC.globalrms * thrC
-            objC, segC = sep.extract(
-                imgSubC,
-                detThrC,
-                minarea=minDetC,
-                deblend_nthresh=debThrC,
-                deblend_cont=debConC,
-                filter_kernel=convKerC,
-                filter_type='conv',
-                segmentation_map=True)
-        except Exception:
-            detThrC = bkgC.globalrms * (thrC + 2)
-            objC, segC = sep.extract(
-                imgSubC,
-                detThrC,
-                minarea=minDetC,
-                deblend_nthresh=int(debThrC / 2),
-                deblend_cont=debConC,
-                filter_kernel=convKerC,
-                filter_type='conv',
-                segmentation_map=True)
+        errArr, filter_type = None, 'conv'
+        detThrC, detThrH = thrC * bkgC.globalrms, thrH * bkgH.globalrms
+
+    # Cold Detection Run
+    try:
+        objC, segC = sep.extract(imgSubC, detThrC, minarea=minDetC,
+                                 deblend_nthresh=debThrC,
+                                 deblend_cont=debConC,
+                                 filter_kernel=convKerC,
+                                 filter_type=filter_type,
+                                 err=errArr,
+                                 segmentation_map=True)
+    except Exception:
+        # Try it once more
+        print("### Failed the first time, try it again...")
+        objC, segC = sep.extract(imgSubC, (detThrC, + 2),
+                                 minarea=minDetC,
+                                 deblend_nthresh=(debThrC * 2),
+                                 deblend_cont=(debConC / 2),
+                                 filter_kernel=convKerC,
+                                 filter_type=filter_type,
+                                 err=errArr,
+                                 segmentation_map=True)
     if verbose:
         print("###    %d objects have been detected in the \
                Cold Run" % objC['x'].shape[0])
 
     # Clean the objects
     objC = sepValidObjects(objC)
-    """
-    Save objects list to different format of files
-    """
+
+    # Save objects list to different format of files
     prefixC = os.path.join(rerunDir, (prefix + '_' + suffix + 'objC'))
     if showAll:
-        saveSEPObjects(
-            objC, prefix=prefixC, color='Blue', csv=False, pkl=False, reg=True)
-    """
-    Calculate the object-galaxy center distance
-    """
-    cenDistC = objDistTo(objC, galX, galY)
-    """
-    Get first estimations of basic parameters for central galaxy
-    Center; Add a flag about this
-    """
-    cenObjIndexC = np.nanargmin(cenDistC)
-    """
-    Get their shapes and sizes
-    """
-    galFlux = objC[cenObjIndexC]['cflux']
-    galA = objC[cenObjIndexC]['a']
-    galCenX = objC[cenObjIndexC]['x']
-    galCenY = objC[cenObjIndexC]['y']
-    """
-    In case there is something wrong with the measurements of the
-    central object, fall back to certain safe values
-    """
-    if not np.isfinite(galA):
-        galA = 10.0
-    if not np.isfinite(galCenX):
-        galCenX = galX
-    if not np.isfinite(galCenY):
-        galCenY = galY
+        saveSEPObjects(objC, prefix=prefixC, color='Blue', csv=False,
+                       pkl=False, reg=True)
 
-    if verbose:
-        print("\n###  2.2. ESTIMATE THE B/A AND PA OF THE GALAXY")
-    if galQ is None:
-        galQ = (objC[cenObjIndexC]['b'] / objC[cenObjIndexC]['a'])
-        if not np.isfinite(galQ):
-            galQ = 0.99
-    if galPA is None:
-        galPA = (objC[cenObjIndexC]['theta'] * 180.0 / np.pi)
-        if not np.isfinite(galPA):
-            galPA = 0.0
+    # Calculate the object-galaxy center distance
+    cenDistC = objDistTo(objC, galX, galY)
+
+    # Index for central galaxy
+    cenObjIndexC = np.nanargmin(cenDistC)
+    cenObjC = objC[cenObjIndexC]
+
+    # Basic properties of the central galaxy
+    galFlux, galA, galB = cenObjC['cflux'], cenObjC['a'], cenObjC['b']
+    galCenX, galCenY = cenObjC['x'], cenObjC['y']
+    galQ, galPA = (galB / galA), (cenObjC['theta'] * 180.0 / np.pi)
+    galA = galA if np.isfinite(galA) else 10.0
+    galCenX = galCenX if np.isfinite(galCenX) else galX
+    galCenY = galCenY if np.isfinite(galCenY) else galY
+    galQ = galQ if np.isfinite(galQ) else 0.95
+    galPA = galPA if np.isfinite(galPA) else 0.0
     if verbose:
         print("###    (b/a) of the galaxy: %6.2f" % galQ)
         print("###      PA  of the galaxy: %6.1f" % galPA)
+
     """
     The Basic Parameters of the Central Galaxy:
 
@@ -1444,32 +1375,14 @@ def coaddCutoutPrepare(prefix,
     """
     galR20, galR50, galR90 = getFluxRadius(
         imgSubC, objC[cenObjIndexC], maxSize=6.0, subpix=5, byteswap=False)
-    if not np.isfinite(galR20):
-        sepFlags = addFlag(sepFlags, 'R20_FAIL', True)
-        galR20 = galA if np.isfinite(galA) else 30.0
-    else:
-        sepFlags = addFlag(sepFlags, 'R20_FAIL', False)
-    if not np.isfinite(galR50):
-        sepFlags = addFlag(sepFlags, 'R50_FAIL', True)
-        galR50 = (galA * 1.5) if np.isfinite(galA) else 50.0
-    else:
-        sepFlags = addFlag(sepFlags, 'R50_FAIL', False)
-    if not np.isfinite(galR90):
-        sepFlags = addFlag(sepFlags, 'R90_FAIL', True)
-        galR90 = (galA * 3.0) if np.isfinite(galA) else 100.0
-    else:
-        sepFlags = addFlag(sepFlags, 'R90_FAIL', False)
-    if verbose:
-        print("###    R20 Cen: %7.2f" % galR20)
-        print("###    R50 Cen: %7.2f" % galR50)
-        print("###    R90 Cen: %7.2f" % galR90)
-    """
-    Make a flag if the galR90 is larger than 1/3 of the image size
-    """
-    if (galR90 > (dimX / 3.0) or galR90 > (dimY / 3.0)):
-        sepFlags = addFlag(sepFlags, 'R90_BIG', True)
-    else:
-        sepFlags = addFlag(sepFlags, 'R90_BIG', False)
+    galR20 = galR20 if np.isfinite(galR20) else 25.0
+    galR50 = galR50 if np.isfinite(galR50) else 50.0
+    galR90 = galR90 if np.isfinite(galR90) else 100.0
+
+    # Make a flag if the galR90 is larger than 1/3 of the image size
+    sepFlags = addFlag(sepFlags, 'R90_BIG',
+                       (galR90 > (dimX / 3.0) or galR90 > (dimY / 3.0)))
+
     """
     Define a series of radius for masking:
         - galR1 = galR90 * 2.0
@@ -1477,153 +1390,89 @@ def coaddCutoutPrepare(prefix,
         - galR3 = galR90 * 6.0
         - These numbers are pretty random too..sorry
     """
-    if verbose:
-        print("###  2.3. ESTIMATING THE GAL_R1/R2/R3")
     galR1 = (galR90 * 2.0) if galR1 is None else (galR1 * galR90)
     galR2 = (galR90 * 4.0) if galR2 is None else (galR2 * galR90)
     galR3 = (galR90 * 6.0) if galR3 is None else (galR3 * galR90)
     if verbose:
-        print("###    galR1: %7.2f" % galR1)
-        print("###    galR2: %7.2f" % galR2)
-        print("###    galR3: %7.2f" % galR3)
-    """
-    Make a flag if the galR4 it larger than 2/3 of the image size
-    """
-    if (galR3 >= dimX / 1.5):
-        sepFlags = addFlag(sepFlags, 'R3_BIG', True)
-    else:
-        sepFlags = addFlag(sepFlags, 'R3_BIG', False)
-    """
-    Define a region that encloses the entire galaxy
+        print("###  2.3. ESTIMATING THE GAL_R1/R2/R3")
+        print("\n###    R20/50/90 : %6.2f/%6.2f/%6.2f" % (
+                galR20, galR50, galR90))
+        print("\n###    galR1/R2/R3 : %6.2f/%6.2f/%6.2f" % (
+                galR1, galR2, galR3))
 
-    """
+    # Make a flag if the galR4 it larger than 2/3 of the image size
+    sepFlags = addFlag(sepFlags, 'R3_BIG', (galR3 >= dimX / 1.5))
+
+    # Define a region that encloses the entire galaxy
     mskGal = np.zeros(imgSubC.shape, dtype='uint8')
-    sep.mask_ellipse(
-        mskGal,
-        galX,
-        galY,
-        galR3, (galR3 * galQ), (galPA * np.pi / 180.0),
-        r=1.1)
     mskR2 = np.zeros(imgSubC.shape, dtype='uint8')
-    sep.mask_ellipse(
-        mskR2,
-        galX,
-        galY,
-        galR2, (galR2 * galQ), (galPA * np.pi / 180.0),
-        r=1.1)
-    """
-    Clear up the DETECTION mask plane in this region
-    """
-    if detFound:
-        detMsk = copy.deepcopy(detArr).astype(int)
-        detMsk[mskGal > 0] = 0
-        detMsk[detMsk > 0] = 1
-        detMskConv = seg2Mask(detMsk, sigma=3.5, mskThr=sigthr)
-    """
-    Estimate the distance to the central galaxies in the elliptical coordinates
-    """
+    sep.mask_ellipse(mskGal, galX, galY, galR3, (galR3 * galQ),
+                     (galPA * np.pi / 180.0), r=1.1)
+    sep.mask_ellipse(mskR2, galX, galY, galR2, (galR2 * galQ),
+                     (galPA * np.pi / 180.0), r=1.1)
+
+    # Clear up the DETECTION mask plane in this region
+    detMsk = seg2Mask(((detArr > 0) & ~mskGal),
+                      sigma=3, mskThr=sigthr) if detArr is not None else None
+
+    # Estimate the distance to the central galaxies in elliptical coordinates
     cenDistC = objDistTo(objC, galX, galY, pa=galPA, q=galQ)
-    """
-    Threshold and convolution kernel for hot run
-    """
+
+    # Threshold and convolution kernel for hot run
     if verbose:
         print("\n###  2.4. OBJECT DETECTION: HOT RUN")
         print("###     Hot run detection threshold: %4.1f" % thrH)
     convKerH = getConvKernel(kernel)
-    """
-    Hot Detection Run
-    """
-    if useSigArr and (sigArr is not None):
-        if verbose:
-            print("###     Using an external sigma array!")
-        try:
-            detThrH = thrH
-            objH, segH = sep.extract(
-                imgSubH,
-                detThrH,
-                minarea=minDetH,
-                deblend_nthresh=debThrH,
-                deblend_cont=debConH,
-                err=errArr,
-                filter_kernel=convKerH,
-                filter_type='matched',
-                segmentation_map=True)
-        except Exception:
-            detThrH = (thrH + 2)
-            objH, segH = sep.extract(
-                imgSubH,
-                detThrH,
-                minarea=minDetH,
-                deblend_nthresh=int(debThrH / 2),
-                deblend_cont=debConH,
-                err=errArr,
-                filter_kernel=convKerH,
-                filter_type='matched',
-                segmentation_map=True)
-    else:
-        try:
-            detThrH = bkgH.globalrms * thrH
-            objH, segH = sep.extract(
-                imgSubH,
-                detThrH,
-                minarea=minDetH,
-                deblend_nthresh=debThrH,
-                deblend_cont=debConH,
-                filter_kernel=convKerH,
-                filter_type='conv',
-                segmentation_map=True)
-        except Exception:
-            detThrH = bkgH.globalrms * (thrH + 2)
-            objH, segH = sep.extract(
-                imgSubH,
-                detThrH,
-                minarea=minDetH,
-                deblend_nthresh=int(debThrH / 2),
-                deblend_cont=debConH,
-                filter_kernel=convKerH,
-                filter_type='conv',
-                segmentation_map=True)
+
+    # Hot Detection Run
+    try:
+        objH, segH = sep.extract(imgSubH, detThrH, minarea=minDetH,
+                                 deblend_nthresh=debThrH,
+                                 deblend_cont=debConH,
+                                 filter_kernel=convKerH,
+                                 filter_type=filter_type,
+                                 err=errArr,
+                                 segmentation_map=True)
+    except Exception:
+        # Try it once more
+        print("### Failed the first time, try it again...")
+        objH, segH = sep.extract(imgSubH, (detThrH, + 2),
+                                 minarea=minDetH,
+                                 deblend_nthresh=(debThrH * 2),
+                                 deblend_cont=(debConH / 2),
+                                 filter_kernel=convKerH,
+                                 filter_type=filter_type,
+                                 err=errArr,
+                                 segmentation_map=True)
     if verbose:
         print("###    %d objects have been detected in the \
                Hot Run" % objH['x'].shape[0])
 
     # Clean the objects
     objH = sepValidObjects(objH)
-    """
-    Save objects list to different format of files
-    """
+
+    # Save objects list to different format of files
     prefixH = os.path.join(rerunDir, (prefix + '_' + suffix + 'objH'))
     if showAll:
         saveSEPObjects(
             objH, prefix=prefixH, color='Red', csv=False, pkl=False, reg=True)
-    """
-    Estimate the distance to the central galaxies in the elliptical coordinates
-    """
+
+    # Estimate the distance to the central galaxies in elliptical coordinates
     cenDistH = objDistTo(objH, galX, galY, pa=galPA, q=galQ)
+
     """
     Visualize these detections
     """
     if visual and showAll:
-        """ Fig.c """
         objPNG1 = os.path.join(rerunDir, (prefix + '_' + suffix + 'objC.png'))
-        objEllC = getEll2Plot(objC, radius=(objC['a'] / 2 * growC))
-        showSEPImage(
-            imgSubC,
-            contrast=0.15,
-            title='Detections - Cold Run',
-            pngName=objPNG1,
-            ellList1=objEllC,
-            ellColor1='b')
-        """ Fig.d """
         objPNG2 = os.path.join(rerunDir, (prefix + '_' + suffix + 'objH.png'))
+        objEllC = getEll2Plot(objC, radius=(objC['a'] / 2 * growC))
         objEllH = getEll2Plot(objH, radius=(objH['a'] / 2 * growH))
-        showSEPImage(
-            imgSubH,
-            contrast=0.30,
-            title='Detections - Hot Run',
-            pngName=objPNG2,
-            ellList1=objEllH,
-            ellColor1='r')
+        showSEPImage(imgSubC, contrast=0.15, title='Detections - Cold Run',
+                     pngName=objPNG1, ellList1=objEllC, ellColor1='b')
+        showSEPImage(imgSubH, contrast=0.30, title='Detections - Hot Run',
+                     pngName=objPNG2, ellList1=objEllH, ellColor1='r')
+
     """
     3. Merge the objects from Cold and Hot runs together
     """
@@ -1631,20 +1480,13 @@ def coaddCutoutPrepare(prefix,
         print("\n### 3. COMBINE OBJECTS FROM COLD AND HOT RUN ")
     objComb, objHnew, objCnew = combObjCat(
         objC, objH, keepH=True, cenDistC=cenDistC, rad=galR90, tol=tol)
-    """
-    Also save the combined object lists
-    """
+
+    # Also save the combined object lists
     prefixComb = os.path.join(rerunDir, (prefix + '_' + suffix + 'objComb'))
-    saveSEPObjects(
-        objComb,
-        prefix=prefixComb,
-        color='Green',
-        csv=False,
-        pkl=False,
-        reg=True)
-    """
-    Calculate the object-galaxy center distance...Again
-    """
+    saveSEPObjects(objComb, prefix=prefixComb, color='Green',
+                   csv=False, pkl=False, reg=True)
+
+    # Calculate the object-galaxy center distance...Again
     cenDistComb = objDistTo(objComb, galX, galY, pa=galPA, q=galQ)
     cenObjIndex = np.nanargmin(cenDistComb)
 
@@ -1652,44 +1494,29 @@ def coaddCutoutPrepare(prefix,
         print("\n###    %d objects are left in the \
               combined list" % len(objComb))
     if visual and showAll:
-        """ Fig.e """
         objPNG3 = os.path.join(rerunDir,
                                (prefix + '_' + suffix + 'objComb.png'))
-        objEllComb = getEll2Plot(objComb, radius=(objComb['a'] * growH))
-        showSEPImage(
-            imgSubC,
-            contrast=0.06,
-            title='Detections - Combined',
-            pngName=objPNG3,
-            ellList1=objEllComb,
-            ellColor1='orange')
+        objEllComb = getEll2Plot(objComb, radius=(objComb['a'] / 2 * growH))
+        showSEPImage(imgSubC, contrast=0.1, title='Detections - Combined',
+                     pngName=objPNG3, ellList1=objEllComb, ellColor1='orange')
+
     """
     4. Extract Different Flux Radius: R20, R50, R90 for every objects
     """
     if verbose:
         print("\n### 4. EXTRACTING R20, R50, R90 OF EACH OBJECTS ")
-    """
-    Which image to use is a question:
-    imgArr, imgSubC, or imgSubH
-
-    TODO: Test
-    """
     r20, r50, r90 = getFluxRadius(
-        imgByteSwap(imgSubH), objComb, maxSize=10.0, subpix=5)
+        imgByteSwap(imgSubH), objComb, maxSize=6.0, subpix=5)
     rPhoto = objComb['a']
-    """
-    Some objects at the edge could have failed R50/R90, replace them with:
-    a * factor;  factor is still pretty random
-    """
+    # Some objects at the edge could have failed R50/R90, replace them with:
+    # a * factor;  factor is still pretty random
     r20[np.isnan(r20)] = rPhoto[np.isnan(r20)]
     r50[np.isnan(r50)] = rPhoto[np.isnan(r50)] * 3.0
     r90[np.isnan(r90)] = rPhoto[np.isnan(r90)] * 5.0
-    """
-    Estimate concentration index
-    """
+
+    # Estimate concentration index
     concen = (r90 / r50)
     if visual:
-        """ Fig.f """
         objPNG4 = os.path.join(rerunDir,
                                (prefix + '_' + suffix + 'objRad.png'))
         objEllR20 = getEll2Plot(objComb, radius=r20)
@@ -1725,6 +1552,7 @@ def coaddCutoutPrepare(prefix,
             ell1=ell1,
             ell2=ell2,
             ell3=ell3)
+
     """
     5. Mask all objects on the image
     """
@@ -1738,9 +1566,7 @@ def coaddCutoutPrepare(prefix,
     """
     growMsk = growC * 1.5
     if maskMethod == 1:
-        """
-        Convolve the segmentations into a masks
-        """
+        # Convolve the segmentations into a masks
         segMskAC = seg2Mask(segC, sigma=(sigma + 4.0), mskThr=sigthr)
         segMskAH = seg2Mask(segH, sigma=(sigma + 2.0), mskThr=sigthr)
         mskAll = combMskImage(segMskAC, segMskAH)
@@ -1782,9 +1608,8 @@ def coaddCutoutPrepare(prefix,
         objMskAll['b'] = growMsk * rMinor
     else:
         raise Exception("mask == 1 or mask == 2")
-    """
-    Combined the all object mask with the BAD_MASK and DET_MASK from pipeline
-    """
+
+    # Combined the all object mask with the BAD_MASK and DET_MASK from pipeline
     if combBad and badFound:
         mskAll = combMskImage(mskAll, mskArr)
     if combDet and detFound:
@@ -2219,6 +2044,7 @@ def coaddCutoutPrepare(prefix,
     mskAll = (mskAll | mskR2 | segMskC | segMskH | segMskBig1 | segMskBig2)
 
     # Bright star mask:
+    ellStar = None
     if starCat is not None:
         xStar, yStar, rStar = matchStarCatalog(starCat, imgHead)
         if (xStar is not None) and (yStar is not None):
@@ -2241,8 +2067,6 @@ def coaddCutoutPrepare(prefix,
                     angle=np.array(0.0))
                 for i in range(len(xStar))
             ]
-        else:
-            ellStar = None
 
     """
     if extMask is provided, combine them
@@ -2270,7 +2094,7 @@ def coaddCutoutPrepare(prefix,
         if verbose:
             print("\n###    Combine the final mask with the HSC \
                   DETECTION MASK!")
-        mskFinal = (mskFinal | detMskConv)
+        mskFinal = (mskFinal | detMsk)
         if multiMask:
             mskSmall = (mskSmall | detSMskConv)
             mskLarge = (mskLarge | detLMskConv)
@@ -2505,7 +2329,6 @@ def coaddCutoutPrepare(prefix,
         showObjects(
             objComb,
             cenDistComb,
-            rad=r90,
             outPNG=objPNG,
             cenInd=cenObjIndex,
             r1=galR50,
@@ -2572,19 +2395,19 @@ if __name__ == '__main__':
         dest='bSizeC',
         help='Background size for the Cold Run',
         type=int,
-        default=40)
+        default=80)
     parser.add_argument(
         '--thrH',
         dest='thrH',
         help='Detection threshold for the Hot Run',
         type=float,
-        default=2.5)
+        default=1.5)
     parser.add_argument(
         '--thrC',
         dest='thrC',
         help='Detection threshold for the Cold Run',
         type=float,
-        default=3.0)
+        default=5.0)
     parser.add_argument(
         '--growC',
         dest='growC',
@@ -2614,7 +2437,7 @@ if __name__ == '__main__':
         dest='minDetH',
         help='Minimum pixels for Hot Detections',
         type=float,
-        default=9.0)
+        default=5.0)
     parser.add_argument(
         '--debThrC',
         dest='debThrC',
@@ -2632,13 +2455,13 @@ if __name__ == '__main__':
         dest='debConC',
         help='Deblending continuum level for the Cold Run',
         type=float,
-        default=0.001)
+        default=0.005)
     parser.add_argument(
         '--debConH',
         dest='debConH',
         help='Deblending continuum level for the Hot Run',
         type=float,
-        default=0.0005)
+        default=0.0001)
     parser.add_argument(
         '--galR1',
         dest='galR1',
