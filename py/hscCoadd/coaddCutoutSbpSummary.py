@@ -1393,8 +1393,10 @@ def coaddCutoutSbpSummary(inCat, prefix, root=None, idCol='ID', zCol='Z',
             galZ = galaxy[zCol]
             """Data Dir"""
             if root is None:
+                loc = '.'
                 sumDir = sumFolder
             else:
+                loc = root
                 sumDir = os.path.join(root, sumFolder)
 
             try:
