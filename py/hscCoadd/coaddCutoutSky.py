@@ -106,8 +106,9 @@ def showSkyHist(skypix,
     """
     fig = plt.figure(figsize=(6, 4))
     ax = fig.add_subplot(111)
-    fig.subplots_adjust(hspace=0.1, wspace=0.1, top=0.95, right=0.95)
-    fontsize = 18
+    fig.subplots_adjust(hspace=0.07, wspace=0.0,
+                        left=0.06, bottom=0.15, top=0.99, right=0.95)
+    fontsize = 12
     ax.minorticks_on()
 
     for tick in ax.xaxis.get_major_ticks():
@@ -116,11 +117,11 @@ def showSkyHist(skypix,
         tick.label1.set_fontsize(fontsize)
 
     if astroHist:
-        _ =  hist(skypix, bins='knuth', ax=ax, alpha=0.4, color='cyan',
-                  histtype='stepfilled', normed=True)
+        _ = hist(skypix, bins='knuth', ax=ax, alpha=0.4, color='cyan',
+                 histtype='stepfilled', normed=True)
     else:
-        _ =  plt.hist(skypix, bins=100, ax=ax, alpha=0.4, color='cyan',
-                      histtype='stepfilled', normed=True)
+        _ = plt.hist(skypix, bins=100, ax=ax, alpha=0.4, color='cyan',
+                     histtype='stepfilled', normed=True)
 
     if skypix2 is not None:
         if astroHist:
@@ -178,7 +179,7 @@ def showSkyHist(skypix,
                 transform=ax.transAxes)
 
     if savePng:
-        fig.savefig(pngName, dpi=60)
+        fig.savefig(pngName, dpi=70)
         plt.close(fig)
 
 
@@ -208,23 +209,20 @@ def getSEPSky(imgArr,
         raise Exception("## The image and mask don't have the same size!")
 
     # What if there is no useful masked pixel
-    imgMasked = copy.deepcopy(imgArr)
-    imgMasked[mskArr > 0] = np.nan
     try:
-        sepBkg = sep.Background(
-            imgMasked, bw=bkgSize, bh=bkgSize, fw=bkgFilter, fh=bkgFilter)
+        sepBkg = sep.Background(imgArr, mask=mskArr, bw=bkgSize, bh=bkgSize,
+                                fw=bkgFilter, fh=bkgFilter)
     except ValueError:
-        imgTemp = copy.deepcopy(imgMasked)
-        imgTemp = imgTemp.byteswap(True).newbyteorder()
-        sepBkg = sep.Background(
-            imgTemp, bw=bkgSize, bh=bkgSize, fw=bkgFilter, fh=bkgFilter)
+        imgArr = imgArr.byteswap(True).newbyteorder()
+        sepBkg = sep.Background(imgArr, mask=mskArr, bw=bkgSize, bh=bkgSize,
+                                fw=bkgFilter, fh=bkgFilter)
 
     avgBkg = sepBkg.globalback
     rmsBkg = sepBkg.globalrms
     if (not np.isfinite(avgBkg)) or (not np.isfinite(rmsBkg)):
-        warnings.warn("\n## The average or rms of SEP background is infinite")
+        warnings.warn("###    The SEP background has problem")
     if verbose:
-        print("\n###    SEP BKG AVG, RMS : %10.7f, %10.7f" % (avgBkg, rmsBkg)
+        print("###    SEP BKG AVG, RMS : %10.7f, %10.7f" % (avgBkg, rmsBkg))
 
     # Subtract the sky model from the image
     try:
@@ -237,7 +235,7 @@ def getSEPSky(imgArr,
         hdu = fits.PrimaryHDU(imgSave)
         hdu.header = imgHead
         hdulist = fits.HDUList([hdu])
-        hdulist.writeto(fitsSub, clobber=True)
+        hdulist.writeto(fitsSub, overwrite=True)
 
         if saveBkg:
             fitsBkg = prefix + '_' + suffix + '_bkg.fits'
@@ -246,7 +244,7 @@ def getSEPSky(imgArr,
             hdu = fits.PrimaryHDU(bkgSave)
             hdu.header = imgHead
             hdulist = fits.HDUList([hdu])
-            hdulist.writeto(fitsBkg, clobber=True)
+            hdulist.writeto(fitsBkg, overwrite=True)
     except Exception:
         warnings.warn("## Something wrong with the SEP background subtraction")
 
@@ -268,8 +266,6 @@ def getSEPSky(imgArr,
     pixSky1 = pixSky1[np.isfinite(pixSky1)]
     try:
         pixSky1, low1, upp1 = sigmaclip(pixSky1, low=skyClip, high=skyClip)
-        print("###    %d pixels left for sky of origin image" % len(pixSky1))
-        print("###    Boundary: %8.5f -- %8.5f" % (low1, upp1))
     except Exception:
         warnings.warn("\nSigma clip fails for imgBin")
 
@@ -277,8 +273,6 @@ def getSEPSky(imgArr,
     pixSky2 = pixSky2[np.isfinite(pixSky2)]
     try:
         pixSky2, low2, upp2 = sigmaclip(pixSky2, low=skyClip, high=skyClip)
-        print("###    %d sky pixels left on bkg subtracted image" % len(pixSky2))
-        print("###    Boundary: %8.5f -- %8.5f" % (low2, upp2))
     except Exception:
         warnings.warn("Sigma clip fails for mskBin")
 
@@ -318,8 +312,6 @@ def getGlobalSky(imgArr,
     pixels = pixels[np.isfinite(pixels)]
     try:
         pixNoMsk, low3, upp3 = sigmaclip(pixels, low=skyClip, high=skyClip)
-        print("###    %d pixels left for sky of origin image" % len(pixNoMsk))
-        print("###    Boundary: %8.5f -- %8.5f" % (low3, upp3))
     except Exception:
         warnings.warn("\n### sigmaclip failed for original image!")
         pixNoMsk = pixels
@@ -333,7 +325,7 @@ def getGlobalSky(imgArr,
         mskBin = hUtil.congrid(mskAll, (dimBinX, dimBinY), method='neighbour')
     except Exception:
         warnings.warn('### congrid failed!')
-        print "\n###    Image rebin is failed for this galaxy !!!"
+        print("\n###    Image rebin is failed for this galaxy !!!")
         imgBin = imgArr
         mskBin = mskAll
 
@@ -342,16 +334,11 @@ def getGlobalSky(imgArr,
     pixels = pixels[np.isfinite(pixels)]
     try:
         pixNoMskBin, low4, upp4 = sigmaclip(pixels, low=skyClip, high=skyClip)
-        print("###    %d pixels left for sky of binned image" % len(pixNoMskBin))
-        print("###    Boundary: %8.5f -- %8.5f" % (low4, upp4))
     except Exception:
         warnings.warn("### sigmaclip failed for binned image!")
         pixNoMskBin = pixels
 
     numSkyPix = len(pixNoMskBin)
-    if verbose:
-        print("###    Global Background After Rebin the Image ")
-        print("###    NPixels: %10d" % numSkyPix)
     # Get the basic statistics of the global sky
     skyAvg, skyStd = np.nanmean(pixNoMskBin), np.nanstd(pixNoMskBin)
     if not np.isfinite(skyAvg) or not np.isfinite(skyStd):
@@ -369,7 +356,8 @@ def getGlobalSky(imgArr,
     if verbose:
         print("###    Median / Mean / Std / Skew / SBP: " +
               " %8.5f / %8.5f / %8.5f / %8.5f / %5.2f" % (skyMed, skyAvg,
-                                                          skyStd, skySkw, sbExpt))
+                                                          skyStd, skySkw,
+                                                          sbExpt))
 
     if visual:
         skyPNG = prefix + '_' + suffix + 'skyhist.png'
