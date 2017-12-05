@@ -2,7 +2,7 @@
 # encoding: utf-8
 """Estimate background of HSC cutout."""
 
-from __future__ import division
+from __future__ import (division, print_function)
 
 import os
 import copy
@@ -46,7 +46,7 @@ SEP = '-' * 100
 WAR = '!' * 100
 
 
-def readCutout(prefix, root=None, exMask=None, verbose=True):
+def readCutout(prefix, root=None, exMask=None, verbose=False):
     """
     Read Cutout Image.
 
@@ -62,7 +62,8 @@ def readCutout(prefix, root=None, exMask=None, verbose=True):
             mskFile = os.path.join(root, mskFile)
     else:
         mskFile = exMask
-    print "### Mask Used : %s" % mskFile
+    if verbose:
+        print("###    Mask Used : %s" % mskFile)
 
     if os.path.islink(imgFile):
         imgOri = os.readlink(imgFile)
@@ -72,8 +73,7 @@ def readCutout(prefix, root=None, exMask=None, verbose=True):
         mskFile = mskOri
 
     if (not os.path.isfile(imgFile)) or (not os.path.isfile(mskFile)):
-        print imgFile
-        print mskFile
+        print(imgFile, mskFile)
         raise Exception("### Can not find the Image or BadMask File!")
     else:
         imgHdu = fits.open(imgFile)
@@ -101,7 +101,7 @@ def showSkyHist(skypix,
 
     Parameters:
     """
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(6, 4))
     ax = fig.add_subplot(111)
     fig.subplots_adjust(hspace=0.1, wspace=0.1, top=0.95, right=0.95)
     fontsize = 18
@@ -184,28 +184,8 @@ def showSkyHist(skypix,
             transform=ax.transAxes)
 
     if savePng:
-        fig.savefig(pngName, dpi=70)
+        fig.savefig(pngName, dpi=60)
         plt.close(fig)
-
-
-def getIsophoteSky(imgArr, mskArr):
-    """
-    Estimating the background value within isophotes around the galaxy.
-
-    Parameters:
-    """
-    # TODO
-    pass
-
-
-def getRadBoxSky(imgArr, mskArr):
-    """
-    Estimating the background by thowing random boxes on the image.
-
-    This could also be used to estimate the detection limit of the image
-    """
-    # TODO
-    pass
 
 
 def getSEPSky(imgArr,
@@ -228,11 +208,6 @@ def getSEPSky(imgArr,
 
     Parameters:
     """
-    if verbose:
-        print SEP
-        print "### ESTIMATING THE GLOBAL BACKGROUND AND SURFACE \
-                BRIGHTNESS LIMIT"
-
     dimX, dimY = imgArr.shape
     mskX, mskY = mskArr.shape
     if (dimX != mskX) or (dimY != mskY):
@@ -253,11 +228,9 @@ def getSEPSky(imgArr,
     avgBkg = sepBkg.globalback
     rmsBkg = sepBkg.globalrms
     if (not np.isfinite(avgBkg)) or (not np.isfinite(rmsBkg)):
-        print WAR
-        warnings.warn("## The average or rms of SEP background is infinite")
+        warnings.warn("\n## The average or rms of SEP background is infinite")
     if verbose:
-        print SEP
-        print "### SEP BKG AVG, RMS : %10.7f, %10.7f" % (avgBkg, rmsBkg)
+        print("\n###    SEP BKG AVG, RMS : %10.7f, %10.7f" % (avgBkg, rmsBkg)
 
     # Subtract the sky model from the image
     try:
@@ -280,9 +253,7 @@ def getSEPSky(imgArr,
             hdu.header = imgHead
             hdulist = fits.HDUList([hdu])
             hdulist.writeto(fitsBkg, clobber=True)
-
     except Exception:
-        print WAR
         warnings.warn("## Something wrong with the SEP background subtraction")
 
     # Rebin image
@@ -294,9 +265,7 @@ def getSEPSky(imgArr,
         mskBin = hUtil.congrid(mskArr, (dimBinX, dimBinY), method='neighbour')
     except Exception:
         warnings.warn("congrid fails!")
-        print WAR
-        print "# Image rebin is failed for this galaxy !!!"
-        print WAR
+        print("###    Image rebin is failed for this galaxy !!!")
         imgBin = imgArr
         subBin = imgSub
         mskBin = mskArr
@@ -305,20 +274,18 @@ def getSEPSky(imgArr,
     pixSky1 = pixSky1[np.isfinite(pixSky1)]
     try:
         pixSky1, low1, upp1 = sigmaclip(pixSky1, low=skyClip, high=skyClip)
-        print "### %d pixels left for sky of origin image" % len(pixSky1)
-        print "###      Boundary: %8.5f -- %8.5f" % (low1, upp1)
+        print("###    %d pixels left for sky of origin image" % len(pixSky1))
+        print("###    Boundary: %8.5f -- %8.5f" % (low1, upp1))
     except Exception:
-        print WAR
-        warnings.warn("Sigma clip fails for imgBin")
+        warnings.warn("\nSigma clip fails for imgBin")
 
     pixSky2 = subBin[mskBin == 0].flatten()
     pixSky2 = pixSky2[np.isfinite(pixSky2)]
     try:
         pixSky2, low2, upp2 = sigmaclip(pixSky2, low=skyClip, high=skyClip)
-        print "### %d sky pixels left on bkg subtracted image" % len(pixSky2)
-        print "###      Boundary: %8.5f -- %8.5f" % (low2, upp2)
+        print("###    %d sky pixels left on bkg subtracted image" % len(pixSky2))
+        print("###    Boundary: %8.5f -- %8.5f" % (low2, upp2))
     except Exception:
-        print WAR
         warnings.warn("Sigma clip fails for mskBin")
 
     if visual:
@@ -350,22 +317,17 @@ def getGlobalSky(imgArr,
 
     """
     # Estimate the global background level
-    if verbose:
-        print SEP
-        print "### ESTIMATING THE GLOBAL BACKGROUND AND SURFACE \
-                BRIGHTNESS LIMIT"
-
     dimX, dimY = imgArr.shape
+
     # Pixel values of all pixels that are not masked out (before rebinned)
     pixels = imgArr[mskAll == 0].flatten()
     pixels = pixels[np.isfinite(pixels)]
     try:
         pixNoMsk, low3, upp3 = sigmaclip(pixels, low=skyClip, high=skyClip)
-        print "### %d pixels left for sky of origin image" % len(pixNoMsk)
-        print "###      Boundary: %8.5f -- %8.5f" % (low3, upp3)
+        print("###    %d pixels left for sky of origin image" % len(pixNoMsk))
+        print("###    Boundary: %8.5f -- %8.5f" % (low3, upp3))
     except Exception:
-        print WAR
-        warnings.warn("### sigmaclip failed for original image!")
+        warnings.warn("\n### sigmaclip failed for original image!")
         pixNoMsk = pixels
         del pixels
 
@@ -377,9 +339,7 @@ def getGlobalSky(imgArr,
         mskBin = hUtil.congrid(mskAll, (dimBinX, dimBinY), method='neighbour')
     except Exception:
         warnings.warn('### congrid failed!')
-        print WAR
-        print "# Image rebin is failed for this galaxy !!!"
-        print WAR
+        print "\n###    Image rebin is failed for this galaxy !!!"
         imgBin = imgArr
         mskBin = mskAll
 
@@ -388,35 +348,35 @@ def getGlobalSky(imgArr,
     pixels = pixels[np.isfinite(pixels)]
     try:
         pixNoMskBin, low4, upp4 = sigmaclip(pixels, low=skyClip, high=skyClip)
-        print "### %d pixels left for sky of binned image" % len(pixNoMskBin)
-        print "###      Boundary: %8.5f -- %8.5f" % (low4, upp4)
+        print("###    %d pixels left for sky of binned image" % len(pixNoMskBin))
+        print("###    Boundary: %8.5f -- %8.5f" % (low4, upp4))
     except Exception:
-        print WAR
         warnings.warn("### sigmaclip failed for binned image!")
         pixNoMskBin = pixels
 
     numSkyPix = len(pixNoMskBin)
     if verbose:
-        print "###  Global Background After Rebin the Image "
-        print "###      NPixels: %10d" % numSkyPix
+        print("###    Global Background After Rebin the Image ")
+        print("###    NPixels: %10d" % numSkyPix)
     # Get the basic statistics of the global sky
     skyAvg, skyStd = np.nanmean(pixNoMskBin), np.nanstd(pixNoMskBin)
     if not np.isfinite(skyAvg) or not np.isfinite(skyStd):
-        warnings.warn("###  No useful global skyAvg / Std for %s" % prefix)
+        warnings.warn("\n###    No useful global skyAvg / Std for %s" % prefix)
     skyMed = np.nanmedian(pixNoMskBin)
     if not np.isfinite(skyMed):
-        warnings.warn("###  No useful global skyMed for %s" % prefix)
+        warnings.warn("\n###    No useful global skyMed for %s" % prefix)
         skyMed = skyAvg if np.isfinite(skyAvg) else 0.00
+
     skySkw = scipy.stats.skew(pixNoMskBin)
     sbExpt = cdPrep.getSbpValue(3.0 * skyStd, pix * rebin, pix * rebin, zp=zp)
+
     if not np.isfinite(sbExpt):
-        warnings.warn("###  No useful global sbExpt for %s" % prefix)
+        warnings.warn("\n###    No useful global sbExpt for %s" % prefix)
     if verbose:
-        print "###    Median Sky: %8.5f" % skyMed
-        print "###      Mean Sky: %8.5f" % skyAvg
-        print "###    StdDev Sky: %8.5f" % skyStd
-        print "###      Skewness: %8.5f" % skySkw
-        print "###    SB. Expect: %8.2f" % sbExpt
+        print("###    Median / Mean / Std / Skew / SBP: " +
+              " %8.5f / %8.5f / %8.5f / %8.5f / %5.2f" % (skyMed, skyAvg,
+                                                          skyStd, skySkw, sbExpt))
+
     if visual:
         skyPNG = prefix + '_' + suffix + 'skyhist.png'
         showSkyHist(
@@ -428,6 +388,7 @@ def getGlobalSky(imgArr,
             skyMed=skyMed,
             skyStd=skyStd,
             skySkw=skySkw)
+
     """Save a txt file summary"""
     skyTxt = prefix + '_' + suffix + 'sky.dat'
     text_file = open(skyTxt, "w")
@@ -468,16 +429,10 @@ def coaddCutoutSky(prefix,
     if (root is not None) and (root[-1] != '/'):
         root += '/'
     if verbose:
-        print COM
-        print "### DEAL WITH IMAGE : %s" % (root + prefix + '_img.fits')
-        print COM
-    # Necessary information
-    if verbose:
-        print "###    The pixel scale in X/Y directions " + \
-            "are %7.4f / %7.4f arcsecs" % (pix, pix)
-        print "###    The photometric zeropoint is %6.2f " % zp
-        print "###    A %3d x %3d binning will be applied" % (rebin, rebin)
-        print "###    A %4.1f sigma-clipping will be applied" % skyClip
+        print(SEP)
+        print("###    DEAL WITH IMAGE : %s" % (root + prefix + '_img.fits'))
+        print("###    Binning: %3d; %4.1f sigma-clipping" % (rebin, skyClip))
+
     # Get rid of the NaN pixels, if there is any
     mskArr[np.isnan(imgArr)] = 1
 
@@ -546,7 +501,7 @@ if __name__ == '__main__':
         dest='bkgSize',
         help='Background size for SEP',
         type=int,
-        default=40)
+        default=60)
     parser.add_argument(
         '--bkgFilter',
         dest='bkgFilter',

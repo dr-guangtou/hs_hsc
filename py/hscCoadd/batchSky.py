@@ -210,7 +210,7 @@ if __name__ == '__main__':
         dest='bkgSize',
         help='Background size for SEP',
         type=int,
-        default=40)
+        default=60)
     parser.add_argument(
         '--bkgFilter',
         dest='bkgFilter',
