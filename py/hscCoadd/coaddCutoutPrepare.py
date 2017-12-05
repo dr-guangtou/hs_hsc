@@ -1058,7 +1058,7 @@ def matchStarCatalog(starCat, imgHead, margin=200, aggres=600):
 
     imgWcs = WCS(imgHead)
     ra0, dec0 = imgWcs.all_pix2world(0 - margin,
-                                     0 + margin,
+                                     0 - margin,
                                      0)
     ra1, dec1 = imgWcs.all_pix2world(dimX + margin,
                                      dimY + margin,
@@ -1586,7 +1586,6 @@ def coaddCutoutPrepare(prefix,
     objNoCen = np.delete(objComb.copy(), indCen)
     r90NoCen = np.delete(r90.copy(), indCen)
     distNoCen = np.delete(cenDistComb.copy(), indCen)
-
 
     """
     7. Convert the list of SEP detections to initial guess of 1-Comp
