@@ -1575,35 +1575,18 @@ def coaddCutoutPrepare(prefix,
     6. Remove the central object (or clear the central region)
        Separate the objects into different group and mask them out using
        different growth ratio
-    """
-    objNoCen = copy.deepcopy(objComb)
-    r90NoCen = copy.deepcopy(r90)
-    distNoCen = copy.deepcopy(cenDistComb)
-    """
+
     central == 1: Only remove objects with central distance smaller than
                     a minimum value
-    central == 2: Remove all objects within galR1
+    central == 2: Remove all objects within a very small radius
     """
-    if central == 1:
-        indCen = np.where(cenDistComb < minCenDist)
-        if verbose:
-            print("###    Find %d object(s) in the " % len(indCen[0]) +
-                  "central region")
-        objNoCen = np.delete(objNoCen, indCen)
-        r90NoCen = np.delete(r90NoCen, indCen)
-        distNoCen = np.delete(distNoCen, indCen)
-    elif central == 2:
-        # Remove all objects within certain radii to the center of galaxy
-        # TODO: Not perfect parameter choice
-        indCen = np.where(cenDistComb < galR1)
-        if verbose:
-            print("###    Find %d object(s) in the " +
-                  "central region" % len(indCen[0]))
-        objNoCen = np.delete(objNoCen, indCen)
-        r90NoCen = np.delete(r90NoCen, indCen)
-        distNoCen = np.delete(distNoCen, indCen)
-
+    indCen = (np.where(cenDistComb < minCenDist) if central == 1
+              else np.where(cenDistComb < galR1))
     sepFlags = addFlag(sepFlags, 'MULTICEN', len(indCen[0]) > 1)
+    objNoCen = np.delete(objComb.copy(), indCen)
+    r90NoCen = np.delete(r90.copy(), indCen)
+    distNoCen = np.delete(cenDistComb.copy(), indCen)
+
 
     """
     7. Convert the list of SEP detections to initial guess of 1-Comp
@@ -1612,44 +1595,39 @@ def coaddCutoutPrepare(prefix,
     """
     Group 1: Objects that are too close to the galaxy center
              Could be star or galaxy
-    """
-    group1 = np.where(cenDistComb <= galR50)
-    sepFlags = addFlag(sepFlags, 'G1_EXIST', len(group1[0]) > 1)
-
-    """
     Group 2: Objects that are within certain radius, and flux is larger
              than certain fraction of the main galaxy (Near)
-    """
-    fluxRatio1 = 0.10
-    group2 = np.where((cenDistComb > galR50) & (cenDistComb <= galR90) &
-                      (objComb['cflux'] > fluxRatio1 * galFlux))
-    sepFlags = addFlag(sepFlags, 'G2_EXIST', len(group2[0]) > 0)
-
-    """
     Group 3: Objects that are within certain radius, and flux is larger
              than certain fraction of the main galaxy (Far)
     """
-    fluxRatio2 = 0.50
+    fluxRatio1, fluxRatio2 = 0.10, 0.50
+    group1 = np.where(cenDistComb <= galR50)
+    group2 = np.where((cenDistComb > galR50) & (cenDistComb <= galR90) &
+                      (objComb['cflux'] > fluxRatio1 * galFlux))
     group3 = np.where((cenDistComb > galR90) & (cenDistComb <= galR90 * 3.0) &
                       (objComb['cflux'] > fluxRatio2 * galFlux))
+    sepFlags = addFlag(sepFlags, 'G1_EXIST', len(group1[0]) > 1)
+    sepFlags = addFlag(sepFlags, 'G2_EXIST', len(group2[0]) > 0)
     sepFlags = addFlag(sepFlags, 'G3_EXIST', len(group3[0]) > 0)
 
     if verbose:
-        print("###    N galaxies in Group " +
-              "1/2/3: %d/%d/%d" % (len(group1[0]),
-                                   len(group2[0]), len(group3[0])))
+        print("###    N galaxies in Center / Group " +
+              "1 / 2 / 3: %d%d/%d/%d" % (len(indCen[0]), len(group1[0]),
+                                         len(group2[0]), len(group3[0])))
 
-    # Number of galaxies should be considering fitting
+    # Number of galaxies should be fit altogether
     nObjFit = (len(group1[0]) + len(group2[0]) + len(group3[0]))
     iObjFit = np.concatenate((group1[0], group2[0], group3[0]))
 
     """
     8. Separate the rest objects into different groups according to
        their distance to the central galaxy
-    """
-    """
-    Isolate objects into different group
-    TODO: Not perfect parameter choice
+
+    Generating final mask by growing the size of objects using the
+    correponding ratios:
+        objG1 : growH
+        objG2 : growW
+        objG3 : growC
     """
     indG1 = (distNoCen <= galR1)
     indG2 = (distNoCen > galR1) & (distNoCen < galR3)
@@ -1657,44 +1635,19 @@ def coaddCutoutPrepare(prefix,
     objG1 = objNoCen[indG1]
     objG2 = objNoCen[indG2]
     objG3 = objNoCen[indG3]
-    """
-    Generating final mask by growing the size of objects using the
-    correponding ratios:
-        objG1 : growH
-        objG2 : growW
-        objG3 : growC
-    """
     mskG1 = np.zeros(imgArr.shape, dtype='uint8')
     mskG2 = np.zeros(imgArr.shape, dtype='uint8')
     mskG3 = np.zeros(imgArr.shape, dtype='uint8')
     """
-    TODO: Option Not Sure Which Way is Better!
+    Todo: Option Not Sure Which Way is Better!
     """
     if growMethod == 1:
-        sep.mask_ellipse(
-            mskG1,
-            objG1['x'],
-            objG1['y'],
-            objG1['a'],
-            objG1['b'],
-            objG1['theta'],
-            r=growH)
-        sep.mask_ellipse(
-            mskG2,
-            objG2['x'],
-            objG2['y'],
-            objG2['a'],
-            objG2['b'],
-            objG2['theta'],
-            r=growW)
-        sep.mask_ellipse(
-            mskG3,
-            objG3['x'],
-            objG3['y'],
-            objG3['a'],
-            objG3['b'],
-            objG3['theta'],
-            r=growC)
+        sep.mask_ellipse(mskG1, objG1['x'], objG1['y'], objG1['a'], objG1['b'],
+            objG1['theta'], r=growH)
+        sep.mask_ellipse(mskG2, objG2['x'], objG2['y'], objG2['a'], objG2['b'],
+            objG2['theta'], r=growW)
+        sep.mask_ellipse(mskG3, objG3['x'], objG3['y'], objG3['a'], objG3['b'],
+            objG3['theta'], r=growC)
         objG1['a'] *= growH
         objG1['b'] *= growH
         objG2['a'] *= growW
@@ -1703,96 +1656,65 @@ def coaddCutoutPrepare(prefix,
         objG3['b'] *= growC
     else:
         adGrow1 = adaptiveMask(objG1, a=2.2)
-        sep.mask_ellipse(
-            mskG1,
-            objG1['x'],
-            objG1['y'],
-            r90NoCen[indG1], (r90NoCen[indG1] * objG1['b'] / objG1['a']),
-            objG1['theta'],
-            r=adGrow1)
         adGrow2 = adaptiveMask(objG2, a=2.4)
-        sep.mask_ellipse(
-            mskG2,
-            objG2['x'],
-            objG2['y'],
-            r90NoCen[indG2], (r90NoCen[indG2] * objG2['b'] / objG2['a']),
-            objG2['theta'],
-            r=adGrow2)
         adGrow3 = adaptiveMask(objG3, a=2.6)
-        sep.mask_ellipse(
-            mskG3,
-            objG3['x'],
-            objG3['y'],
-            r90NoCen[indG3], (r90NoCen[indG3] * objG3['b'] / objG3['a']),
-            objG3['theta'],
-            r=adGrow3)
+        sep.mask_ellipse(mskG1, objG1['x'], objG1['y'], r90NoCen[indG1],
+                         (r90NoCen[indG1] * objG1['b'] / objG1['a']),
+                         objG1['theta'], r=adGrow1)
+        sep.mask_ellipse(mskG2, objG2['x'], objG2['y'], r90NoCen[indG2],
+                         (r90NoCen[indG2] * objG2['b'] / objG2['a']),
+                         objG2['theta'], r=adGrow2)
+        sep.mask_ellipse(mskG3, objG3['x'], objG3['y'], r90NoCen[indG3],
+                         (r90NoCen[indG3] * objG3['b'] / objG3['a']),
+                         objG3['theta'], r=adGrow3)
         objG1['a'] *= adGrow1
         objG1['b'] *= adGrow1
         objG2['a'] *= adGrow2
         objG2['b'] *= adGrow2
         objG3['a'] *= adGrow3
         objG3['b'] *= adGrow3
-    """
-    Combine the three groups of objects together
-    After accounting for their size growth
-    """
-    prefixF = os.path.join(rerunDir, (prefix + '_' + suffix + 'objFin'))
-    objMask = np.concatenate((objG1, objG2, objG3))
-    saveSEPObjects(
-        objMask, prefix=prefixF, color='Green', csv=False, pkl=False, reg=True)
-    """
-    Remove the segmentations of objects inside a radius:
 
-    2 Addtional parameters:
-        cenDist < radLimit
-        magnitude >= magLimit
+    # Combine the three groups of objects together
+    if showAll:
+        prefixF = os.path.join(rerunDir, (prefix + '_' + suffix + 'objFin'))
+        objMask = np.concatenate((objG1, objG2, objG3))
+        saveSEPObjects(
+            objMask, prefix=prefixF, color='Green', csv=False, pkl=False, reg=True)
 
-    # Hot One
-    """
-    radLimit = 20.0  # pixel
-    magLimit = 20.5
+    # Remove the segmentations of objects inside a radius:
+    radLimit, magLimit = 20.0, 20.5
 
+    # Hot one
     segHnew = copy.deepcopy(segH)
     objExcludeH = (np.where(cenDistH <= radLimit)[0] + 1)
     for index in objExcludeH:
         segHnew[segH == index] = 0
-    """
-    Remove the faint objects from the segmentation map
-    """
+
+    # Remove the faint objects from the segmentation map
     for index, obj in enumerate(objH):
         if (-2.5 * np.log10(obj['cflux']) + photZP) >= magLimit:
             segHnew[segH == (index + 1)] = 0
     segMskH = seg2Mask(segHnew, sigma=(sigma + 1.0), mskThr=sigthr)
-    """
+
     # Cold One
-    """
     segCnew = copy.deepcopy(segC)
     objExcludeC = (np.where(cenDistC <= galR3)[0] + 1)
     for index in objExcludeC:
         segCnew[segC == index] = 0
-    """
-    Remove the faint objects from the segmentation map
-    """
+
+    # Remove the faint objects from the segmentation map
     for index, obj in enumerate(objC):
         if (-2.5 * np.log10(obj['cflux']) + photZP) >= (magLimit - 1.5):
             segCnew[segC == (index + 1)] = 0
     segMskC = seg2Mask(segCnew, sigma=(sigma + 2.0), mskThr=sigthr)
-    """
-    Isolate the bright and/or big objects that are not too close
-    to the center
 
-    * A few more moving parts
-    """
+    # Isolate the bright and/or big objects that are not too close to the center
     segBig1 = copy.deepcopy(segC)
-    indBig1 = []
     for index, obj in enumerate(objC):
         if ((cenDistC[index] <= galR3) or (obj['flux'] <= galFlux * 0.3) or
             (obj['a'] <= galA * 0.3)):
             segBig1[segC == (index + 1)] = 0
-        else:
-            indBig1.append(index)
     segMskBig1 = seg2Mask(segBig1, sigma=(sigma * 2.0 + 6.0), mskThr=sigthr)
-    # objBig = objC[indBig1]
 
     segBig2 = copy.deepcopy(segC)
     indBig2 = []
@@ -1804,11 +1726,11 @@ def coaddCutoutPrepare(prefix,
             indBig2.append(index)
     segMskBig2 = seg2Mask(segBig2, sigma=(sigma + 1.0), mskThr=sigthr)
     objBig = objC[indBig2]
+
     """
     MultiMask Mode
     """
     if multiMask:
-        print("\n###  MultiMask : Will generate mskSmall and mskLarge")
         # Larger mask
         objLG1 = objNoCen[indG1]
         objLG2 = objNoCen[indG2]
@@ -1902,19 +1824,18 @@ def coaddCutoutPrepare(prefix,
         objSG2['b'] *= (growW - 1.0)
         objSG3['a'] *= (growC - 1.0)
         objSG3['b'] *= (growC - 1.0)
-    """
-    Combine them into the final mask
-    """
+
+    # Combine them into the final mask
     mskFinal = (mskG1 | mskG2 | mskG3 | segMskC | segMskH | segMskBig1 |
                 segMskBig2)
+    mskAll = (mskAll | mskG1 | mskG2 | mskG3 | mskR2 | segMskC | segMskH |
+              segMskBig1 | segMskBig2)
 
     if multiMask:
         mskSmall = (mskSG1 | mskSG2 | mskSG3 | segMskSC | segMskSH |
                     segMskSB1 | segMskSB2)
         mskLarge = (mskLG1 | mskLG2 | mskLG3 | segMskLC | segMskLH |
                     segMskLB1 | segMskLB2)
-
-    mskAll = (mskAll | mskR2 | segMskC | segMskH | segMskBig1 | segMskBig2)
 
     # Bright star mask:
     ellStar = None
@@ -1941,42 +1862,36 @@ def coaddCutoutPrepare(prefix,
                 for i in range(len(xStar))
             ]
 
-    """
-    if extMask is provided, combine them
-    """
+    # if extMask is provided, combine them
     if extMask is not None:
         mskFinal = (mskFinal | extMask)
         mskAll = (mskAll | extMask)
         if multiMask:
             mskSmall = (mskSmall | extMask)
             mskLarge = (mskLarge | extMask)
-    """
+
     # Have the option to combine with HSC BAD MASK
-    """
     if combBad and badFound:
         mskFinal = (mskFinal | mskArr)
         if multiMask:
             mskSmall = (mskSmall | mskArr)
             mskLarge = (mskLarge | mskArr)
-    """
+
     # Have the option to combine with HSC DETECTION MASK
-    """
     if combDet and detFound:
         mskFinal = (mskFinal | detMsk)
         if multiMask:
             mskSmall = (mskSmall | detSMskConv)
             mskLarge = (mskLarge | detLMskConv)
-    """
-    if extKeep is provided, free them
-    """
+
+    # if extKeep is provided, free them
     if extKeep is not None:
         mskFinal[extKeep > 0] = 0
         if multiMask:
             mskSmall[extKeep > 0] = 0
             mskLarge[extKeep > 0] = 0
-    """
-    Mask out all the NaN pixels
-    """
+
+    # Mask out all the NaN pixels
     mskFinal[indImgNaN] = 1
     mskFinFile = os.path.join(rerunDir,
                               (prefix + '_' + suffix + 'mskfin.fits'))
@@ -1985,9 +1900,8 @@ def coaddCutoutPrepare(prefix,
         mskLarge[indImgNaN] = 1
         mskSmallFile = mskFinFile.replace('mskfin', 'msksmall')
         mskLargeFile = mskFinFile.replace('mskfin', 'msklarge')
-    """
-    See if the center of the image has been masked out
-    """
+
+    # See if the center of the image has been masked out
     sumMskCen, dump1, dump2 = sep.sum_ellipse(
         np.float32(mskFinal),
         galCenX,
@@ -1995,36 +1909,29 @@ def coaddCutoutPrepare(prefix,
         20.0,
         20.0, (galPA * np.pi / 180.0),
         r=1.0)
-    if sumMskCen > 0:
-        sepFlags = addFlag(sepFlags, 'MSK_CEN', True)
-        print("###    %d pixels around center are masked out" % sumMskCen)
-    else:
-        sepFlags = addFlag(sepFlags, 'MSK_CEN', False)
+    sepFlags = addFlag(sepFlags, 'MSK_CEN', sumMskCen > 0)
+
     sumMskR20, dump1, dump2 = sep.sum_ellipse(
         np.float32(mskFinal),
         galCenX,
         galCenY,
         galR20, (galR20 * galQ), (galPA * np.pi / 180.0),
         r=1.0)
-    if sumMskR20 > 0:
-        sepFlags = addFlag(sepFlags, 'MSK_R20', True)
-        print("###    %d pixels within R20 have been masked out" % sumMskR20)
-    else:
-        sepFlags = addFlag(sepFlags, 'MSK_R20', False)
+    sepFlags = addFlag(sepFlags, 'MSK_R20', sumMskR20 > 0)
+
     sumMskR50, dump1, dump2 = sep.sum_ellipse(
         np.float32(mskFinal),
         galCenX,
         galCenY,
         galR50, (galR50 * galQ), (galPA * np.pi / 180.0),
         r=1.0)
-    if sumMskR50 > 0:
-        sepFlags = addFlag(sepFlags, 'MSK_R50', True)
-        print("###    %d pixels within R50 have been masked out" % sumMskR50)
-    else:
-        sepFlags = addFlag(sepFlags, 'MSK_R50', False)
-    """
+    sepFlags = addFlag(sepFlags, 'MSK_R50', sumMskR50 > 0)
+    if verbose:
+        print("###    N pixels are masked out " +
+              "<20pix / <R20 / <R50: %d / %d / %d" % (sumMskCen,
+                                                      sumMskR20, sumMskR50))
+
     # Add a few information about the central galaxy to the header
-    """
     mskHead = copy.deepcopy(imgHead)
     mskHead.set('GAL_X', galX)
     mskHead.set('GAL_Y', galY)
@@ -2041,33 +1948,26 @@ def coaddCutoutPrepare(prefix,
     mskHead.set('GAL_R2', galR2)
     mskHead.set('GAL_R3', galR3)
     mskHead.set('NUM_FIT', nObjFit)
-    """
+
     # Put the Flags into the header
-    """
     for flag in sepFlags:
-        # if visual:
-        #    print("###      %s : %1d" % (flag['name'], flag['value']))
         mskHead.set(flag['name'], flag['value'])
-    """
-    Save the all object mask to FITS
-    """
+
+    # Save masks to FITS
     mskAllFile = os.path.join(rerunDir,
                               (prefix + '_' + suffix + 'mskall.fits'))
-    mskAll = mskAll.astype(np.int16)
+    mskAll = mskAll.astype('uint8')
     saveFits(mskAll, mskAllFile, head=imgHead)
 
-    """
-    Save the final mask to FITS
-    """
-    mskFinal = mskFinal.astype(np.int16)
+    mskFinal = mskFinal.astype('uint8')
     saveFits(mskFinal, mskFinFile, head=mskHead)
     if multiMask:
-        mskSmall = mskSmall.astype(np.int16)
+        mskSmall = mskSmall.astype('uint8')
         saveFits(mskSmall, mskSmallFile, head=mskHead)
-        mskLarge = mskLarge.astype(np.int16)
+        mskLarge = mskLarge.astype('uint8')
         saveFits(mskLarge, mskLargeFile, head=mskHead)
+
     if visual:
-        """ Fig.g """
         mskPNG2 = os.path.join(rerunDir,
                                (prefix + '_' + suffix + 'mskfin.png'))
         ellA = Ellipse(
@@ -2184,6 +2084,7 @@ def coaddCutoutPrepare(prefix,
                 ell2=ellB,
                 ell3=ellC,
                 ellColor4='b')
+
     """
     9. Visualize the detected objects, and find the ones need to be fit
     Make a few plots
