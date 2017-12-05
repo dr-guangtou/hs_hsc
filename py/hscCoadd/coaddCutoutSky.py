@@ -15,8 +15,11 @@ from scipy.stats import sigmaclip
 
 # Astropy
 from astropy.io import fits
-# AstroML
-from astroML.plotting import hist
+try:
+    from astropy.visualization import hist
+    astroHist = True
+except ImportError:
+    astroHist = False
 
 # SEP
 import sep
@@ -112,35 +115,30 @@ def showSkyHist(skypix,
     for tick in ax.yaxis.get_major_ticks():
         tick.label1.set_fontsize(fontsize)
 
-    counts1, bins1, patches1 = hist(
-        skypix,
-        bins='knuth',
-        ax=ax,
-        alpha=0.4,
-        color='cyan',
-        histtype='stepfilled',
-        normed=True)
+    if astroHist:
+        _ =  hist(skypix, bins='knuth', ax=ax, alpha=0.4, color='cyan',
+                  histtype='stepfilled', normed=True)
+    else:
+        _ =  plt.hist(skypix, bins=100, ax=ax, alpha=0.4, color='cyan',
+                      histtype='stepfilled', normed=True)
+
     if skypix2 is not None:
-        counts2, bins2, patches2 = hist(
-            skypix2,
-            bins='knuth',
-            ax=ax,
-            alpha=0.9,
-            color='k',
-            histtype='step',
-            normed=True,
-            linewidth=2)
+        if astroHist:
+            _ = hist(skypix2, bins='knuth', ax=ax, alpha=0.9, color='k',
+                     histtype='step', normed=True, linewidth=2)
+        else:
+            _ = plt.hist(skypix2, bins=100, ax=ax, alpha=0.9, color='k',
+                         histtype='step', normed=True, linewidth=2)
+
     if skypix3 is not None:
-        counts3, bins3, patches3 = hist(
-            skypix3,
-            bins='knuth',
-            ax=ax,
-            alpha=0.8,
-            color='k',
-            histtype='step',
-            normed=True,
-            linewidth=2,
-            linestyle='dashed')
+        if astroHist:
+            _ = hist(skypix3, bins='knuth', ax=ax, alpha=0.8, color='k',
+                     histtype='step', normed=True, linewidth=2,
+                     linestyle='dashed')
+        else:
+            _ = plt.hist(skypix3, bins=100, ax=ax, alpha=0.8, color='k',
+                         histtype='step', normed=True, linewidth=2,
+                         linestyle='dashed')
     # Horizontal line
     ax.axvline(0.0, linestyle='-', color='k', linewidth=1.5)
 
@@ -160,28 +158,24 @@ def showSkyHist(skypix,
     # Highligh the mode of sky pixel distribution
     ax.axvline(skyMed, linestyle='--', color='b', linewidth=1.5)
 
-    ax.set_xlabel('Pixel Value', fontsize=20)
+    ax.set_xlabel('Pixel Value', fontsize=12)
     ax.set_xlim(skyAvg - 4.0 * skyStd, skyAvg + 5.0 * skyStd)
     # Show a few information
     ax.text(
-        0.7, 0.9, "Min : %8.4f" % skyMin, fontsize=21, transform=ax.transAxes)
+        0.7, 0.9, "Min : %8.4f" % skyMin, fontsize=12, transform=ax.transAxes)
     ax.text(
-        0.7, 0.8, "Max : %8.4f" % skyMax, fontsize=21, transform=ax.transAxes)
+        0.7, 0.8, "Max : %8.4f" % skyMax, fontsize=12, transform=ax.transAxes)
     ax.text(
-        0.7, 0.7, "Avg : %8.4f" % skyAvg, fontsize=21, transform=ax.transAxes)
+        0.7, 0.7, "Avg : %8.4f" % skyAvg, fontsize=12, transform=ax.transAxes)
     ax.text(
-        0.7, 0.6, "Std : %8.4f" % skyStd, fontsize=21, transform=ax.transAxes)
+        0.7, 0.6, "Std : %8.4f" % skyStd, fontsize=12, transform=ax.transAxes)
     ax.text(
-        0.7, 0.5, "Med : %8.4f" % skyMed, fontsize=21, transform=ax.transAxes)
+        0.7, 0.5, "Med : %8.4f" % skyMed, fontsize=12, transform=ax.transAxes)
     ax.text(
-        0.7, 0.4, "Skew: %8.4f" % skySkw, fontsize=21, transform=ax.transAxes)
+        0.7, 0.4, "Skew: %8.4f" % skySkw, fontsize=12, transform=ax.transAxes)
     if sbExpt is not None:
-        ax.text(
-            0.7,
-            0.3,
-            "S.B : %8.5f" % sbExpt,
-            fontsize=21,
-            transform=ax.transAxes)
+        ax.text(0.7, 0.3, "S.B : %8.5f" % sbExpt, fontsize=12,
+                transform=ax.transAxes)
 
     if savePng:
         fig.savefig(pngName, dpi=60)
