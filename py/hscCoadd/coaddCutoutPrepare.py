@@ -498,6 +498,14 @@ def addFlag(dictName, flagName, flagValue):
 
     return newDict
 
+def obj2EllStr(obj, reg):
+    """
+    Generate a string to represent the elliptical shape of an object.
+    """
+    reg.write('ellipse ' + str(obj['x']) + ' ' + str(obj['y']) + ' ' +
+              str(obj['a']) + ' ' + str(obj['b']) + ' ' +
+              str(obj['theta'] * 180.0 / np.pi) + '\n')
+
 
 def objList2Reg(objs, regName='ds9.reg', color='Blue'):
     """
@@ -505,22 +513,16 @@ def objList2Reg(objs, regName='ds9.reg', color='Blue'):
 
     Parameters:
     """
-    # DS9 region file header
-    head1 = '# Region file format: DS9 version 4.1\n'
-    head2 = 'global color=%s width=2\n' % color
-    head3 = 'image\n'
     # Open the output file and write the header
     regFile = open(regName, 'w')
-    regFile.write(head1)
-    regFile.write(head2)
-    regFile.write(head3)
+    regFile.write('# Region file format: DS9 version 4.1\n')
+    regFile.write('global color=%s width=2\n' % color)
+    regFile.write('image\n')
+
     # Save the data
     # The format for ellipse is: "ellipse x y radius radius angle"
-    for obj in objs:
-        ellLine = 'ellipse ' + str(obj['x']) + ' ' + str(obj['y']) + ' ' + \
-                  str(obj['a']) + ' ' + str(obj['b']) + ' ' + \
-                  str(obj['theta'] * 180.0 / np.pi) + '\n'
-        regFile.write(ellLine)
+    [obj2EllStr(obj, regFile) for obj in objs]
+
     # Close the file
     regFile.close()
 
@@ -1398,7 +1400,7 @@ def coaddCutoutPrepare(prefix,
     segTemp[segTemp != (cenObjIndexC + 1)] = 0
     galR20, galR50, galR90 = getFluxRadius(
         imgArr, objC[cenObjIndexC], maxSize=20.0, subpix=5, byteswap=True,
-        mask=segTemp)
+        mask=None)
     galR20 = galR20 if np.isfinite(galR20) else 15.0
     galR50 = galR50 if np.isfinite(galR50) else 30.0
     galR90 = galR90 if np.isfinite(galR90) else 50.0
@@ -1642,11 +1644,11 @@ def coaddCutoutPrepare(prefix,
     """
     if growMethod == 1:
         sep.mask_ellipse(mskG1, objG1['x'], objG1['y'], objG1['a'], objG1['b'],
-            objG1['theta'], r=growH)
+                         objG1['theta'], r=growH)
         sep.mask_ellipse(mskG2, objG2['x'], objG2['y'], objG2['a'], objG2['b'],
-            objG2['theta'], r=growW)
+                         objG2['theta'], r=growW)
         sep.mask_ellipse(mskG3, objG3['x'], objG3['y'], objG3['a'], objG3['b'],
-            objG3['theta'], r=growC)
+                         objG3['theta'], r=growC)
         objG1['a'] *= growH
         objG1['b'] *= growH
         objG2['a'] *= growW
@@ -1677,8 +1679,8 @@ def coaddCutoutPrepare(prefix,
     if showAll:
         prefixF = os.path.join(rerunDir, (prefix + '_' + suffix + 'objFin'))
         objMask = np.concatenate((objG1, objG2, objG3))
-        saveSEPObjects(
-            objMask, prefix=prefixF, color='Green', csv=False, pkl=False, reg=True)
+        saveSEPObjects(objMask, prefix=prefixF, color='Green', csv=False,
+                       pkl=False, reg=True)
 
     # Remove the segmentations of objects inside a radius:
     radLimit, magLimit = 20.0, 20.5
@@ -2089,21 +2091,12 @@ def coaddCutoutPrepare(prefix,
     Make a few plots
     """
     if visual:
-        """ Fig.h """
         objPNG = os.path.join(rerunDir, (prefix + '_' + suffix + 'objs.png'))
-        showObjects(
-            objComb,
-            cenDistComb,
-            rad=r90,
-            outPNG=objPNG,
-            cenInd=cenObjIndex,
-            r1=galR50,
-            r2=galR90,
-            r3=(3.0 * galR90),
-            fluxRatio1=fluxRatio1,
-            fluxRatio2=fluxRatio2,
-            prefix=prefix,
-            highlight=iObjFit)
+        showObjects(objComb, cenDistComb, rad=r90, outPNG=objPNG,
+                    cenInd=cenObjIndex, r1=galR50, r2=galR90,
+                    r3=(3.0 * galR90),
+                    fluxRatio1=fluxRatio1, fluxRatio2=fluxRatio2,
+                    prefix=prefix, highlight=iObjFit)
 
 
 if __name__ == '__main__':
@@ -2167,7 +2160,7 @@ if __name__ == '__main__':
         dest='thrH',
         help='Detection threshold for the Hot Run',
         type=float,
-        default=1.6)
+        default=2.0)
     parser.add_argument(
         '--thrC',
         dest='thrC',
@@ -2215,7 +2208,7 @@ if __name__ == '__main__':
         dest='debThrH',
         help='Deblending threshold for the Hot Run',
         type=float,
-        default=32.0)
+        default=64.0)
     parser.add_argument(
         '--debConC',
         dest='debConC',
