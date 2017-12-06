@@ -667,23 +667,6 @@ def combObjCat(objCold, objHot, tol=6.0, cenDistC=None, keepH=True):
     objCnew = copy.deepcopy(objC)
     objCnew = np.delete(objCnew, indMatchC)
 
-    # Try to account for the difference in size and area of the same
-    # object from Cold and Hot run
-    # objMatchH = objH[(minDistH < tol) & (np.log10(objH['npix']) < 2.6)]
-    # objMatchC = objC[(minDistC < tol) & (np.log10(objC['npix']) < 2.6)]
-    # This is designed to be only a rough match
-    # Only works for not very big galaxies, will fail for stars
-    # aRatio = (np.nanmedian(objMatchC['a']) / np.nanmedian(objMatchH['a']))
-    # objHnew['a'] *= aRatio
-    # objHnew['b'] *= aRatio
-    # objH['a'] *= aRatio
-    # objH['b'] *= aRatio
-
-    # nRatio = (
-    #     np.nanmedian(objMatchC['npix']) / np.nanmedian(objMatchH['npix']))
-    # objHnew['npix'] = objHnew['npix'] * nRatio
-    # objH['npix'] = objH['npix'] * nRatio
-
     if keepH:
         objComb = np.concatenate((objH, objCnew))
     else:
@@ -804,16 +787,11 @@ def getEll2Plot(objects, radius=None):
         a = objects['a'].copy()
         b = objects['b'].copy()
 
-    ells = [
-        Ellipse(
-            xy=np.array([x[i], y[i]]),
-            width=np.array(2.0 * b[i]),
-            height=np.array(2.0 * a[i]),
-            angle=np.array(pa[i] * 180.0 / np.pi + 90.0))
-        for i in range(x.shape[0])
-    ]
-
-    return ells
+    return [Ellipse(xy=np.array([x[i], y[i]]),
+                    width=np.array(2.0 * b[i]),
+                    height=np.array(2.0 * a[i]),
+                    angle=np.array(pa[i] * 180.0 / np.pi + 90.0))
+            for i in range(x.shape[0])]
 
 
 def getSbpValue(flux, pixX, pixY, zp=None):
@@ -945,17 +923,15 @@ def imgByteSwap(data):
 
     Parameters:
     """
-    dataCopy = copy.deepcopy(data)
-    return dataCopy.byteswap(True).newbyteorder()
+    # dataCopy = copy.deepcopy(data)
+    return data.copy().byteswap(True).newbyteorder()
 
 
 def sepValidObjects(obj):
     """
     Remove objects with negative flux or small size.
     """
-    obj_clean = obj[(obj['flux'] > 0.0) & (obj['a'] > 0.01)]
-
-    return obj_clean
+    return obj[(obj['flux'] > 0.0) & (obj['a'] > 0.01)]
 
 
 def sepGetBkg(img, mask=None, bkgSize=None, bkgFilter=None):
@@ -1399,7 +1375,7 @@ def coaddCutoutPrepare(prefix,
     segTemp = segH.copy()
     segTemp[segTemp != (cenObjIndexC + 1)] = 0
     galR20, galR50, galR90 = getFluxRadius(
-        imgArr, objC[cenObjIndexC], maxSize=20.0, subpix=5, byteswap=True,
+        imgArr, objH[cenObjIndexH], maxSize=20.0, subpix=5, byteswap=True,
         mask=None)
     galR20 = galR20 if np.isfinite(galR20) else 15.0
     galR50 = galR50 if np.isfinite(galR50) else 30.0
@@ -2226,25 +2202,25 @@ if __name__ == '__main__':
         dest='galR1',
         help='galR1 = galR1 * galR90',
         type=float,
-        default=2.0)
+        default=4.0)
     parser.add_argument(
         '--galR2',
         dest='galR2',
         help='galR2 = galR2 * galR90',
         type=float,
-        default=3.5)
+        default=6.5)
     parser.add_argument(
         '--galR3',
         dest='galR3',
         help='galR3 = galR3 * galR90',
         type=float,
-        default=6.0)
+        default=11.0)
     parser.add_argument(
         '--sigma',
         dest='sigma',
         help='Sigma to Gaussian smooth the segmentation image',
         type=float,
-        default=6.0)
+        default=5.0)
     parser.add_argument(
         '--sigthr',
         dest='sigthr',
