@@ -1229,11 +1229,6 @@ def coaddCutoutPrepare(prefix,
         print("\n### 1a. BACKGROUND - COLD " +
               " Avg: %8.5f " % bkgC.globalback +
               " RMS: %8.5f " % bkgC.globalrms)
-    if visual and showAll:
-        showSEPImage(bkgC.back(), contrast=0.3, title='Background - Cold Run',
-                     pngName=os.path.join(rerunDir,
-                                          (prefix + '_' +
-                                           suffix + 'bkgC.png')))
 
     # Hot Background Run
     bkgH, imgSubH = sepGetBkg(imgByteSwap(imgArr), bkgSize=bSizeH, bkgFilter=3)
@@ -1243,11 +1238,7 @@ def coaddCutoutPrepare(prefix,
         print("### 1b. BACKGROUND -  HOT " +
               " Avg: %8.5f " % bkgH.globalback +
               " RMS: %8.5f " % bkgH.globalrms)
-    if visual and showAll:
-        showSEPImage(bkgH.back(), contrast=0.3, title='Background - Hot Run',
-                     pngName=os.path.join(rerunDir,
-                                          (prefix + '_' +
-                                           suffix + 'bkgH.png')))
+
     """
     2. Object detections
 
@@ -1421,19 +1412,6 @@ def coaddCutoutPrepare(prefix,
     cenDistH = objDistTo(objH, galX, galY, pa=galPA, q=galQ)
 
     """
-    Visualize these detections
-    """
-    if visual and showAll:
-        objPNG1 = os.path.join(rerunDir, (prefix + '_' + suffix + 'objC.png'))
-        objPNG2 = os.path.join(rerunDir, (prefix + '_' + suffix + 'objH.png'))
-        objEllC = getEll2Plot(objC, radius=(objC['a'] / 2 * growC))
-        objEllH = getEll2Plot(objH, radius=(objH['a'] / 2 * growH))
-        showSEPImage(imgSubC, contrast=0.15, title='Detections - Cold Run',
-                     pngName=objPNG1, ellList1=objEllC, ellColor1='b')
-        showSEPImage(imgSubH, contrast=0.30, title='Detections - Hot Run',
-                     pngName=objPNG2, ellList1=objEllH, ellColor1='r')
-
-    """
     3. Merge the objects from Cold and Hot runs together
     """
     objComb, objHnew, objCnew = combObjCat(
@@ -1450,12 +1428,6 @@ def coaddCutoutPrepare(prefix,
 
     if verbose:
         print("### 2c.  COMBINED DETECTION: %d objects" % len(objComb['x']))
-    if visual and showAll:
-        objPNG3 = os.path.join(rerunDir,
-                               (prefix + '_' + suffix + 'objComb.png'))
-        objEllComb = getEll2Plot(objComb, radius=(objComb['a'] / 2 * growH))
-        showSEPImage(imgSubC, contrast=0.1, title='Detections - Combined',
-                     pngName=objPNG3, ellList1=objEllComb, ellColor1='orange')
 
     """
     4. Extract Different Flux Radius: R20, R50, R90 for every objects
@@ -1479,43 +1451,6 @@ def coaddCutoutPrepare(prefix,
     # Also make them rounder
     objComb['a'][overSize] /= 5.0
     objComb['b'][overSize] /= 2.5
-
-    if visual:
-        objPNG4 = os.path.join(rerunDir,
-                               (prefix + '_' + suffix + 'objRad.png'))
-        objEllR20 = getEll2Plot(objComb, radius=r50)
-        objEllR50 = getEll2Plot(objComb, radius=r90)
-        objEllR90 = getEll2Plot(objComb[overSize], radius=r90[overSize])
-        # Add three ellipses to highlight galR1, R2, & R3
-        ell1 = Ellipse(
-            xy=(galX, galY),
-            width=(2.0 * galR1 * galQ),
-            height=(2.0 * galR1),
-            angle=(galPA + 90.0))
-        ell2 = Ellipse(
-            xy=(galX, galY),
-            width=(2.0 * galR2 * galQ),
-            height=(2.0 * galR2),
-            angle=(galPA + 90.0))
-        ell3 = Ellipse(
-            xy=(galX, galY),
-            width=(2.0 * galR3 * galQ),
-            height=(2.0 * galR3),
-            angle=(galPA + 90.0))
-        showSEPImage(
-            imgArr,
-            contrast=0.20,
-            title='Flux Radius: R20/R50/R90',
-            pngName=objPNG4,
-            ellList1=objEllR20,
-            ellColor1='r',
-            ellList2=objEllR50,
-            ellColor2='orange',
-            ellList3=objEllR90,
-            ellColor3='b',
-            ell1=ell1,
-            ell2=ell2,
-            ell3=ell3)
 
     """
     5. Mask all objects on the image
@@ -1542,12 +1477,6 @@ def coaddCutoutPrepare(prefix,
         detAll = copy.deepcopy(detArr).astype(int)
         detMskAll = seg2Mask(detAll, sigma=sigma, mskThr=sigthr)
         mskAll = combMskImage(mskAll, detMskAll)
-
-    if visual:
-        mskPNG1 = os.path.join(rerunDir,
-                               (prefix + '_' + suffix + 'mskall.png'))
-        showSEPImage(imgSubC, contrast=0.75, title='Mask - All Objects',
-                     pngName=mskPNG1, mask=mskAll)
 
     """
     6. Remove the central object (or clear the central region)
@@ -1945,23 +1874,95 @@ def coaddCutoutPrepare(prefix,
         saveFits(mskLarge, mskLargeFile, head=mskHead)
 
     if visual:
+        if showAll:
+            # Cold Background
+            showSEPImage(bkgC.back(), contrast=0.3,
+                         title='Background - Cold Run',
+                         pngName=os.path.join(rerunDir,
+                                              (prefix + '_' +
+                                               suffix + 'bkgC.png')))
+            # Hot Background
+            showSEPImage(bkgH.back(), contrast=0.3,
+                         title='Background - Hot Run',
+                         pngName=os.path.join(rerunDir,
+                                              (prefix + '_' +
+                                               suffix + 'bkgH.png')))
+
+            objPNG1 = os.path.join(rerunDir,
+                                   (prefix + '_' + suffix + 'objC.png'))
+            objPNG2 = os.path.join(rerunDir,
+                                   (prefix + '_' + suffix + 'objH.png'))
+            objEllC = getEll2Plot(objC, radius=(objC['a'] / 2 * growC))
+            objEllH = getEll2Plot(objH, radius=(objH['a'] / 2 * growH))
+            # Cold Detections
+            showSEPImage(imgSubC, contrast=0.15, title='Detections - Cold Run',
+                         pngName=objPNG1, ellList1=objEllC, ellColor1='b')
+
+            # Hot Detections
+            showSEPImage(imgSubH, contrast=0.30, title='Detections - Hot Run',
+                         pngName=objPNG2, ellList1=objEllH, ellColor1='r')
+
+            # Combined Detections
+            objPNG3 = os.path.join(rerunDir,
+                                   (prefix + '_' + suffix + 'objComb.png'))
+            objEllComb = getEll2Plot(objComb,
+                                     radius=(objComb['a'] / 2 * growH))
+            showSEPImage(imgSubC, contrast=0.1, title='Detections - Combined',
+                         pngName=objPNG3, ellList1=objEllComb,
+                         ellColor1='orange')
+
+            # R20/50/90 of each object
+            objPNG4 = os.path.join(rerunDir,
+                                   (prefix + '_' + suffix + 'objRad.png'))
+            objEllR20 = getEll2Plot(objComb, radius=r50)
+            objEllR50 = getEll2Plot(objComb, radius=r90)
+            objEllR90 = getEll2Plot(objComb[overSize], radius=r90[overSize])
+            # Add three ellipses to highlight galR1, R2, & R3
+            ell1 = Ellipse(
+                xy=(galX, galY),
+                width=(2.0 * galR1 * galQ),
+                height=(2.0 * galR1),
+                angle=(galPA + 90.0))
+            ell2 = Ellipse(
+                xy=(galX, galY),
+                width=(2.0 * galR2 * galQ),
+                height=(2.0 * galR2),
+                angle=(galPA + 90.0))
+            ell3 = Ellipse(
+                xy=(galX, galY),
+                width=(2.0 * galR3 * galQ),
+                height=(2.0 * galR3),
+                angle=(galPA + 90.0))
+            showSEPImage(
+                imgArr,
+                contrast=0.20,
+                title='Flux Radius: R20/R50/R90',
+                pngName=objPNG4,
+                ellList1=objEllR20,
+                ellColor1='r',
+                ellList2=objEllR50,
+                ellColor2='orange',
+                ellList3=objEllR90,
+                ellColor3='b',
+                ell1=ell1,
+                ell2=ell2,
+                ell3=ell3)
+
+        # Mask of all objects
+        mskPNG1 = os.path.join(rerunDir,
+                               (prefix + '_' + suffix + 'mskall.png'))
+        showSEPImage(imgSubC, contrast=0.75, title='Mask - All Objects',
+                     pngName=mskPNG1, mask=mskAll)
+
+        # Final mask
         mskPNG2 = os.path.join(rerunDir,
                                (prefix + '_' + suffix + 'mskfin.png'))
-        ellA = Ellipse(
-            xy=(galX, galY),
-            width=(2.0 * galR1 * galQ),
-            height=(2.0 * galR1),
-            angle=(galPA + 90.0))
-        ellB = Ellipse(
-            xy=(galX, galY),
-            width=(2.0 * galR2 * galQ),
-            height=(2.0 * galR2),
-            angle=(galPA + 90.0))
-        ellC = Ellipse(
-            xy=(galX, galY),
-            width=(2.0 * galR3 * galQ),
-            height=(2.0 * galR3),
-            angle=(galPA + 90.0))
+        ellA = Ellipse(xy=(galX, galY), width=(2.0 * galR1 * galQ),
+                       height=(2.0 * galR1), angle=(galPA + 90.0))
+        ellB = Ellipse(xy=(galX, galY), width=(2.0 * galR2 * galQ),
+                       height=(2.0 * galR2), angle=(galPA + 90.0))
+        ellC = Ellipse(xy=(galX, galY), width=(2.0 * galR3 * galQ),
+                       height=(2.0 * galR3), angle=(galPA + 90.0))
 
         # objEllG1 = getEll2Plot(objG1)
         objEllG2 = getEll2Plot(objG2)
@@ -1985,6 +1986,14 @@ def coaddCutoutPrepare(prefix,
             ell2=ellB,
             ell3=ellC,
             ellColor4='b')
+
+        # Statistics of the detected objects
+        objPNG = os.path.join(rerunDir, (prefix + '_' + suffix + 'objs.png'))
+        showObjects(objComb, cenDistComb, rad=r90, outPNG=objPNG,
+                    cenInd=cenObjIndex, r1=galR50, r2=galR90,
+                    r3=(3.0 * galR90),
+                    fluxRatio1=fluxRatio1, fluxRatio2=fluxRatio2,
+                    prefix=prefix, highlight=iObjFit)
 
         if multiMask:
             mskPNG3 = mskPNG2.replace('mskfin', 'msksmall')
@@ -2061,18 +2070,6 @@ def coaddCutoutPrepare(prefix,
                 ell2=ellB,
                 ell3=ellC,
                 ellColor4='b')
-
-    """
-    9. Visualize the detected objects, and find the ones need to be fit
-    Make a few plots
-    """
-    if visual:
-        objPNG = os.path.join(rerunDir, (prefix + '_' + suffix + 'objs.png'))
-        showObjects(objComb, cenDistComb, rad=r90, outPNG=objPNG,
-                    cenInd=cenObjIndex, r1=galR50, r2=galR90,
-                    r3=(3.0 * galR90),
-                    fluxRatio1=fluxRatio1, fluxRatio2=fluxRatio2,
-                    prefix=prefix, highlight=iObjFit)
 
 
 if __name__ == '__main__':
