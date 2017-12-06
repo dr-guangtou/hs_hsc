@@ -1225,19 +1225,11 @@ def coaddCutoutPrepare(prefix,
     bkgC, imgSubC = sepGetBkg(imgByteSwap(imgArr), bkgSize=bSizeC, bkgFilter=7)
     if noBkgC:
         imgSubC = imgByteSwap(imgArr)
-    if verbose:
-        print("\n### 1a. BACKGROUND - COLD " +
-              " Avg: %8.5f " % bkgC.globalback +
-              " RMS: %8.5f " % bkgC.globalrms)
 
     # Hot Background Run
     bkgH, imgSubH = sepGetBkg(imgByteSwap(imgArr), bkgSize=bSizeH, bkgFilter=3)
     if noBkgH:
         imgSubH = imgByteSwap(imgArr)
-    if verbose:
-        print("### 1b. BACKGROUND -  HOT " +
-              " Avg: %8.5f " % bkgH.globalback +
-              " RMS: %8.5f " % bkgH.globalrms)
 
     """
     2. Object detections
@@ -1275,7 +1267,7 @@ def coaddCutoutPrepare(prefix,
                                  err=errArr,
                                  segmentation_map=True)
     if verbose:
-        print("### 2a. COLD DETECTION: %d objects" % len(objC['x']))
+        print("### A. COLD DETECTION: %d objects" % len(objC['x']))
 
     # Clean the objects
     objC = sepValidObjects(objC)
@@ -1309,7 +1301,7 @@ def coaddCutoutPrepare(prefix,
                                  err=errArr,
                                  segmentation_map=True)
     if verbose:
-        print("### 2b.  HOT DETECTION: %d objects" % len(objH['x']))
+        print("### B.  HOT DETECTION: %d objects" % len(objH['x']))
 
     # Clean the objects
     objH = sepValidObjects(objH)
@@ -1346,7 +1338,8 @@ def coaddCutoutPrepare(prefix,
     galQ = galQ if np.isfinite(galQ) else 0.95
     galPA = galPA if np.isfinite(galPA) else 0.0
     if verbose:
-        print("###    r: %6.2f; b/a : %4.2f; PA : %5.1f" % (galA, galQ, galPA))
+        print("###    r: %6.2f; b/a : %4.2f; PA : %5.1f" % (cenObjH['a'],
+                                                            galQ, galPA))
 
     """
     The Basic Parameters of the Central Galaxy:
@@ -1383,9 +1376,9 @@ def coaddCutoutPrepare(prefix,
         - galR3 = galR90 * 6.0
         - These numbers are pretty random too..sorry
     """
-    galR1 = (galR90 * 2.0) if galR1 is None else (galR1 * galR90)
-    galR2 = (galR90 * 4.0) if galR2 is None else (galR2 * galR90)
-    galR3 = (galR90 * 6.0) if galR3 is None else (galR3 * galR90)
+    galR1 = (cenObjH['a'] * 2.0) if galR1 is None else (galR1 * cenObjH['a'])
+    galR2 = (cenObjH['a'] * 4.0) if galR2 is None else (galR2 * cenObjH['a'])
+    galR3 = (cenObjH['a'] * 6.0) if galR3 is None else (galR3 * cenObjH['a'])
     if verbose:
         print("###    R20/50/90 : %6.2f / %6.2f / %6.2f" % (
                 galR20, galR50, galR90))
@@ -1427,7 +1420,7 @@ def coaddCutoutPrepare(prefix,
     cenObjIndex = np.nanargmin(cenDistComb)
 
     if verbose:
-        print("### 2c.  COMBINED DETECTION: %d objects" % len(objComb['x']))
+        print("### C.  COMBINED DETECTION: %d objects" % len(objComb['x']))
 
     """
     4. Extract Different Flux Radius: R20, R50, R90 for every objects
@@ -1457,18 +1450,16 @@ def coaddCutoutPrepare(prefix,
     """
     objMskAll = copy.deepcopy(objComb)
     # Convolve the segmentations into a masks
-    segMskAC = seg2Mask(segC, sigma=(sigma + 4.0), mskThr=sigthr)
-    segMskAH = seg2Mask(segH, sigma=(sigma + 2.0), mskThr=sigthr)
     mskAll = np.zeros(imgSubC.shape, dtype='uint8')
 
     # By default, grow every object by "growC * 1.5"
     sep.mask_ellipse(mskAll, objMskAll['x'], objMskAll['y'],
                      objMskAll['a'], objMskAll['b'],
-                     objMskAll['theta'], r=(growC * 1.5))
-    mskAll = (mskAll | segMskAC | segMskAH | mskR2)
+                     objMskAll['theta'], r=growH)
+    mskAll = (mskAll | mskGal)
     mskAll[indImgNaN] = 1
-    objMskAll['a'] *= (growC * 1.5)
-    objMskAll['b'] *= (growC * 1.5)
+    objMskAll['a'] *= growH
+    objMskAll['b'] *= growH
 
     # Combined the all object mask with the BAD_MASK and DET_MASK from pipeline
     if combBad and badFound:
@@ -1544,9 +1535,8 @@ def coaddCutoutPrepare(prefix,
     mskG1 = np.zeros(imgArr.shape, dtype='uint8')
     mskG2 = np.zeros(imgArr.shape, dtype='uint8')
     mskG3 = np.zeros(imgArr.shape, dtype='uint8')
-    """
-    Todo: Option Not Sure Which Way is Better!
-    """
+
+    # Todo: Option Not Sure Which Way is Better!
     if growMethod == 1:
         sep.mask_ellipse(mskG1, objG1['x'], objG1['y'], objG1['a'], objG1['b'],
                          objG1['theta'], r=growH)
@@ -1614,19 +1604,18 @@ def coaddCutoutPrepare(prefix,
             segCnew[segC == (index + 1)] = 0
     segMskC = seg2Mask(segCnew, sigma=(sigma + 2.0), mskThr=sigthr)
 
-    # Isolate the bright and/or big objects that are not too close to the center
+    # Isolate the bright and/or big objects that are not too close to the
+    # center
     segBig1 = copy.deepcopy(segC)
     for index, obj in enumerate(objC):
-        if ((cenDistC[index] <= galR3) or (obj['flux'] <= galFlux * 0.3) or
-            (obj['a'] <= galA * 0.3)):
+        if ((cenDistC[index] <= galR3) or (obj['flux'] <= galFlux * 0.2)):
             segBig1[segC == (index + 1)] = 0
     segMskBig1 = seg2Mask(segBig1, sigma=(sigma * 2.0 + 6.0), mskThr=sigthr)
 
     segBig2 = copy.deepcopy(segC)
     indBig2 = []
     for index, obj in enumerate(objC):
-        if ((cenDistC[index] <= galR1 * 1.2) or
-            (obj['flux'] <= galFlux * 0.20) or (obj['a'] <= galA * 0.20)):
+        if ((cenDistC[index] <= galR2) or (obj['flux'] <= galFlux * 0.3)):
             segBig2[segC == (index + 1)] = 0
         else:
             indBig2.append(index)
@@ -1717,7 +1706,7 @@ def coaddCutoutPrepare(prefix,
             r=(growC - 1.0))
         segMskSH = seg2Mask(segHnew, sigma=(sigma - 1.0), mskThr=sigthr)
         segMskSC = seg2Mask(segCnew, sigma=(sigma + 0.0), mskThr=sigthr)
-        segMskSB1 = seg2Mask(segBig1, sigma=(sigma * 2.0 + 0.0), mskThr=sigthr)
+        segMskSB1 = seg2Mask(segBig1, sigma=(sigma * 2.0), mskThr=sigthr)
         segMskSB2 = seg2Mask(segBig2, sigma=(sigma - 2.0), mskThr=sigthr)
         if detFound:
             detSMsk = copy.deepcopy(detArr).astype(int)
@@ -1734,7 +1723,7 @@ def coaddCutoutPrepare(prefix,
     # Combine them into the final mask
     mskFinal = (mskG1 | mskG2 | mskG3 | segMskC | segMskH | segMskBig1 |
                 segMskBig2)
-    mskAll = (mskAll | mskG1 | mskG2 | mskG3 | mskR2 | segMskC | segMskH |
+    mskAll = (mskAll | mskG1 | mskG2 | mskG3 | segMskC | segMskH |
               segMskBig1 | segMskBig2)
 
     if multiMask:
@@ -2115,7 +2104,7 @@ if __name__ == '__main__':
         help='Method to grow the Final object mask',
         type=int,
         default=1,
-        choices=range(1, 3))
+        choices=range(1, 2))
     parser.add_argument(
         '--bkgH',
         dest='bSizeH',
@@ -2199,19 +2188,19 @@ if __name__ == '__main__':
         dest='galR1',
         help='galR1 = galR1 * galR90',
         type=float,
-        default=4.0)
+        default=5.0)
     parser.add_argument(
         '--galR2',
         dest='galR2',
         help='galR2 = galR2 * galR90',
         type=float,
-        default=6.5)
+        default=10.0)
     parser.add_argument(
         '--galR3',
         dest='galR3',
         help='galR3 = galR3 * galR90',
         type=float,
-        default=11.0)
+        default=16.0)
     parser.add_argument(
         '--sigma',
         dest='sigma',
@@ -2223,7 +2212,7 @@ if __name__ == '__main__':
         dest='sigthr',
         help='Threshold for constraing the convolution mask',
         type=float,
-        default=0.02)
+        default=0.01)
     parser.add_argument(
         '--multiMask', dest='multiMask', action="store_true", default=False)
     parser.add_argument(
