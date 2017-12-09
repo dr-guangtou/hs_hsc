@@ -1376,9 +1376,9 @@ def coaddCutoutPrepare(prefix,
         - galR3 = galR90 * 6.0
         - These numbers are pretty random too..sorry
     """
-    galR1 = (cenObjH['a'] * 2.0) if galR1 is None else (galR1 * cenObjH['a'])
-    galR2 = (cenObjH['a'] * 4.0) if galR2 is None else (galR2 * cenObjH['a'])
-    galR3 = (cenObjH['a'] * 6.0) if galR3 is None else (galR3 * cenObjH['a'])
+    galR1 = (galR50 * 2.0) if galR1 is None else (galR1 * galR50)
+    galR2 = (galR50 * 4.0) if galR2 is None else (galR2 * galR50)
+    galR3 = (galR50 * 6.0) if galR3 is None else (galR3 * galR50)
     if verbose:
         print("###    R20/50/90 : %6.2f / %6.2f / %6.2f" % (
                 galR20, galR50, galR90))
@@ -2140,13 +2140,13 @@ if __name__ == '__main__':
         dest='growW',
         help='Ratio of Growth for the Warm Objects',
         type=float,
-        default=4.0)
+        default=3.0)
     parser.add_argument(
         '--growH',
         dest='growH',
         help='Ratio of Growth for the Hot Objects',
         type=float,
-        default=2.1)
+        default=1.5)
     parser.add_argument(
         '--minDetC',
         dest='minDetC',

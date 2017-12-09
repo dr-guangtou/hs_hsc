@@ -152,10 +152,8 @@ def imgSameSize(img1, img2):
     """Check whether images have the same size."""
     dimX1, dimY1 = img1.shape
     dimX2, dimY2 = img2.shape
-    if (dimX1 == dimX2) and (dimY1 == dimY2):
-        return True
-    else:
-        return False
+
+    return (dimX1 == dimX2) and (dimY1 == dimY2)
 
 
 def ellipCompare(ellipStack, outPng='ellipse_compare.png',
