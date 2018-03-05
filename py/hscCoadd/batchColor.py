@@ -22,7 +22,7 @@ def run(args):
         cbc.coaddBatchCutFull(
             args.root,
             args.incat,
-            filter=args.filter,
+            band=args.band,
             size=args.size,
             idField=args.idField,
             prefix=args.prefix,
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         help="Half size of the cutout box",
         default=200)
     parser.add_argument(
-        '-f', '--filter', dest='filter', help="Filter", default='HSC-I')
+        '-f', '--band', dest='band', help="Filter", default='HSC-I')
     parser.add_argument(
         '-cf',
         '--color-filters',

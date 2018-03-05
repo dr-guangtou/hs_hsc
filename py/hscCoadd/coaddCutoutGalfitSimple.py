@@ -44,7 +44,6 @@ except Exception:
                            max_light=1.).mpl_colormap
     cmap2.set_bad('w', 1.)
 
-mpl.use('Agg')
 mpl.rcParams['figure.figsize'] = 12, 10
 mpl.rcParams['xtick.major.size'] = 8.0
 mpl.rcParams['xtick.major.width'] = 1.5
@@ -54,6 +53,7 @@ mpl.rcParams['ytick.major.size'] = 8.0
 mpl.rcParams['ytick.major.width'] = 1.5
 mpl.rcParams['ytick.minor.size'] = 4.0
 mpl.rcParams['ytick.minor.width'] = 1.5
+plt.rc('text', usetex=True)
 mpl.rc('axes', linewidth=2)
 plt.ioff()
 
@@ -89,7 +89,7 @@ def showModels(outFile, galOut, root=None, verbose=True, vertical=False,
                showZoom=True, zoomLimit=6.0, showTitle=True, showChi2=True,
                zoomSize=None, overComp=True, maskRes=True, returnPlot=False,
                scale1=0.03, sample1=500,
-               scale2=0.40, sample2=500):
+               scale2=0.40, sample2=500, title=None):
     """
     Three columns view of the Galfit models.
 
@@ -224,8 +224,11 @@ def showModels(outFile, galOut, root=None, verbose=True, vertical=False,
             print "XXX Can not highlight the components"
 
     if showTitle:
-        titleStr = ax1.text(0.50, 0.90, os.path.basename(outFile),
-                            fontsize=14, transform=ax1.transAxes,
+        if title is None:
+            title = os.path.basename(outFile)
+        titleStr = ax1.text(0.50, 0.90,
+                            r'$\mathrm{%s}$' % title,
+                            fontsize=25, transform=ax1.transAxes,
                             horizontalalignment='center')
         titleStr.set_bbox(dict(facecolor='white', alpha=0.6,
                           edgecolor='white'))
@@ -295,10 +298,7 @@ def showModels(outFile, galOut, root=None, verbose=True, vertical=False,
     del imgOri, imgMod, imgRes, resShow
     del mskArr
 
-    if returnPlot:
-        return fig
-    else:
-        return maxR
+    return fig
 
 
 def removePSF(readin, root=None, verbose=True, abspath=False, run=False):
