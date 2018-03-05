@@ -299,7 +299,7 @@ def coaddColourImage(root,
             gCut,
             bCut,
             minimum=min,
-            range=(maxShow - min),
+            dataRange=(maxShow - min),
             Q=Q,
             saturatedPixelValue=None)
         if partial:
@@ -529,7 +529,7 @@ def coaddColourImageFull(root,
                 gCut,
                 bCut,
                 minimum=min,
-                range=(max - min),
+                dataRange=(max - min),
                 Q=Q,
                 saturatedPixelValue=None)
             rgbArr.append(imgRgb)
