@@ -294,8 +294,8 @@ def coaddBatchCutout(root,
                         info1=info1,
                         info2=info2,
                         info3=info3,
-                        img_min=img_min,
-                        img_max=img_max,
+                        min=img_min,
+                        max=img_max,
                         Q=Q)
                 else:
                     coaddColourImageFull(
@@ -310,8 +310,8 @@ def coaddBatchCutout(root,
                         info1=None,
                         info2=None,
                         info3=None,
-                        img_min=img_min,
-                        img_max=img_max,
+                        min=img_min,
+                        max=img_max,
                         Q=Q)
             else:
                 coaddColourImage(
@@ -325,8 +325,8 @@ def coaddBatchCutout(root,
                     info1=info1,
                     info2=info2,
                     info3=info3,
-                    img_min=img_min,
-                    img_max=img_max,
+                    min=img_min,
+                    max=img_max,
                     Q=Q)
         elif (matchStatus is 'Full') or (matchStatus is 'Part'):
             if noName:
@@ -345,8 +345,8 @@ def coaddBatchCutout(root,
                     info1=info1,
                     info2=info2,
                     info3=info3,
-                    img_min=img_min,
-                    img_max=img_max,
+                    min=img_min,
+                    max=img_max,
                     Q=Q)
             else:
                 coaddColourImage(
@@ -360,8 +360,8 @@ def coaddBatchCutout(root,
                     info1=info1,
                     info2=info2,
                     info3=info3,
-                    img_min=img_min,
-                    img_max=img_max,
+                    min=img_min,
+                    max=img_max,
                     Q=Q)
 
 
@@ -578,8 +578,8 @@ def singleCut(obj, butler, root, useful, config):
                 info2=None,
                 info3=None,
                 scaleBar=None,
-                img_min=img_min,
-                img_max=img_max,
+                min=img_min,
+                max=img_max,
                 Q=Q,
                 butler=butler)
         else:
@@ -595,8 +595,8 @@ def singleCut(obj, butler, root, useful, config):
                 info2=info2,
                 info3=info3,
                 scaleBar=scaleBar,
-                img_min=img_min,
-                img_max=img_max,
+                min=img_min,
+                max=img_max,
                 Q=Q,
                 butler=butler)
     elif (matchStatus is 'Found' and not noColor):
@@ -617,8 +617,8 @@ def singleCut(obj, butler, root, useful, config):
             info1=info1,
             info2=info2,
             info3=info3,
-            img_min=img_min,
-            img_max=img_max,
+            min=img_min,
+            max=img_max,
             Q=Q,
             butler=butler)
 
