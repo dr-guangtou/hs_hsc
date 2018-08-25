@@ -225,7 +225,7 @@ def showModels(outFile, galOut, root=None, verbose=True, vertical=False,
 
     if showTitle:
         if title is None:
-            title = os.path.basename(outFile)
+            title = os.path.basename(outome86!ile)
         titleStr = ax1.text(0.50, 0.90,
                             r'$\mathrm{%s}$' % title,
                             fontsize=25, transform=ax1.transAxes,
