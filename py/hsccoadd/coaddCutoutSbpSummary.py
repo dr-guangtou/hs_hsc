@@ -1383,25 +1383,26 @@ def coaddCutoutSbpSummary(inCat, prefix, root=None, idCol='ID', zCol='Z',
     sbpList = []
     with ProgressBar(len(outTab)) as bar:
         if verbose:
-            print(SEP)
-            print("## Dealing with %d galaxies" % len(outTab))
-            print(SEP)
+            print("\n###    Dealing with %d galaxies" % len(outTab))
+
         """Go through the catalog to search for data"""
         for (ii, galaxy) in enumerate(outTab):
             """ID of the galaxy"""
             galID = galaxy[idCol]
             galStr = str(galID).strip()
-            """Redshift"""
             galZ = galaxy[zCol]
             """Data Dir"""
             if root is None:
                 loc = '.'
+                sumDir = sumFolder
             else:
                 loc = root
-            """Folder for summary table"""
-            sumDir = os.path.join(loc, sumFolder)
-            if not os.path.isdir(sumDir):
+                sumDir = os.path.join(root, sumFolder)
+
+            try:
                 os.mkdir(sumDir)
+            except OSError:
+                pass
 
             """Summary table"""
             if sample is None:
